@@ -1,0 +1,882 @@
+"use client";
+
+import { BrandMark } from "@/components/landing/brand-mark";
+import { FadeIn } from "@/components/landing/fade-in";
+import { HudFrame } from "@/components/landing/hud-frame";
+import { ProtectedImage } from "@/components/landing/protected-image";
+import { ScrollProgress } from "@/components/landing/scroll-progress";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clapperboard,
+  Gamepad2,
+  Heart,
+  Mail,
+  Sparkles,
+  Tv,
+} from "lucide-react";
+import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
+
+type HeroSlide = {
+  src: string;
+  background: string;
+  alt: string;
+  title?: string;
+};
+
+type CarouselMode = "games" | "anime";
+
+const gameSlides: HeroSlide[] = [
+  {
+    src: "/games-img/genshin1.png",
+    background: "/games-img/genshin2.jpg",
+    alt: "Genshin Impact",
+    title: "Genshin Impact",
+  },
+  {
+    src: "/games-img/endfild1.png",
+    background: "/games-img/endfild2.png",
+    alt: "Arknights Endfield",
+    title: "Arknights: Endfield",
+  },
+];
+
+// Add your anime key visuals here later:
+// { src: "/games-img/anime1.png", background: "/games-img/anime1-bg.jpg", alt: "...", title: "..." }
+const animeSlides: HeroSlide[] = [];
+
+const features = [
+  {
+    icon: Gamepad2,
+    title: "Games I Play",
+    description:
+      "A living collection of titles that shaped my taste — from tactical ops to open-world adventures.",
+    code: "COL-01",
+  },
+  {
+    icon: Tv,
+    title: "Anime I Love",
+    description:
+      "Stories, studios, and seasons that stay with me. The other half of what Studio Zero is built on.",
+    code: "COL-02",
+  },
+  {
+    icon: Sparkles,
+    title: "My Mini Studio",
+    description:
+      "A personal space where both worlds meet — hobbies, experiments, and projects I’m building solo.",
+    code: "COL-03",
+  },
+];
+
+const loopSteps = [
+  {
+    phase: "01",
+    label: "Discover",
+    detail: "Find games and anime that hit different.",
+  },
+  {
+    phase: "02",
+    label: "Collect",
+    detail: "Save the ones that matter into the archive.",
+  },
+  {
+    phase: "03",
+    label: "Connect",
+    detail: "See how stories and systems overlap.",
+  },
+  {
+    phase: "04",
+    label: "Create",
+    detail: "Turn that inspiration into my own work.",
+  },
+];
+
+const navLinks = [
+  { href: "#features", label: "About" },
+  { href: "#gameplay", label: "Flow" },
+  { href: "#media", label: "Archive" },
+  { href: "#newsletter", label: "Connect" },
+];
+
+const footerArchive = [
+  {
+    href: "#hero",
+    label: "Games",
+    detail: "Currently playing",
+    revealArt: true,
+  },
+  { href: "#media", label: "Anime", detail: "Coming soon" },
+  { href: "#gameplay", label: "Creative flow", detail: "How ideas move" },
+];
+
+/** Footer Games hover art — swaps pair every 2 hovers */
+const footerGameArtPairs = [
+  {
+    left: {
+      src: "/footer-anime/anime-4.png",
+      className: "object-cover object-[72%_6%] scale-[1.35]",
+    },
+    right: {
+      src: "/footer-anime/anime-3.png",
+      className: "object-cover object-[68%_8%] scale-[1.35]",
+    },
+  },
+  {
+    left: {
+      src: "/footer-anime/anime-5.png",
+      className: "object-cover object-[62%_8%] scale-[1.25] translate-y-[10%]",
+    },
+    right: {
+      src: "/footer-anime/anime-6.png",
+      className: "object-cover object-[50%_18%] scale-[1.3]",
+    },
+  },
+] as const;
+
+const footerStudio = [
+  { label: "Status", value: "Solo build" },
+  { label: "Focus", value: "Games + Anime" },
+  { label: "Mode", value: "Personal" },
+];
+
+const hudStats = [
+  { label: "STATUS", value: "SOLO BUILD" },
+  { label: "FOCUS", value: "GAMES + ANIME" },
+  { label: "MODE", value: "PERSONAL" },
+];
+
+export default function Home() {
+  const { scrollYProgress } = useScroll();
+  const scrollMist = useTransform(scrollYProgress, [0, 0.45, 1], [0, 0.12, 0.28]);
+  const [carouselMode, setCarouselMode] = useState<CarouselMode>("games");
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [isGlitching, setIsGlitching] = useState(false);
+  const [glitchKey, setGlitchKey] = useState(0);
+  const [hasMounted, setHasMounted] = useState(false);
+  const [showFooterGamesArt, setShowFooterGamesArt] = useState(false);
+  const [footerGamesHoverCount, setFooterGamesHoverCount] = useState(0);
+  const skipNextGlitch = useRef(true);
+
+  // Hover 1–2 → pair 0, hover 3–4 → pair 1, then loops
+  const footerArtPairIndex =
+    footerGamesHoverCount === 0
+      ? 0
+      : Math.floor((footerGamesHoverCount - 1) / 2) % footerGameArtPairs.length;
+
+  const footerArtPair =
+    footerGameArtPairs[footerArtPairIndex] ?? footerGameArtPairs[0];
+
+  const revealFooterGamesArt = () => {
+    setFooterGamesHoverCount((count) => count + 1);
+    setShowFooterGamesArt(true);
+  };
+
+  const showFooterGamesArtOnly = () => {
+    setShowFooterGamesArt(true);
+  };
+
+  const hideFooterGamesArt = () => {
+    setShowFooterGamesArt(false);
+  };
+
+  const heroSlides = carouselMode === "games" ? gameSlides : animeSlides;
+  const slideCount = heroSlides.length;
+  const activeBackground = heroSlides[activeSlide]?.background;
+  const currentSlide = heroSlides[activeSlide];
+
+  const switchMode = (mode: CarouselMode) => {
+    if (mode === carouselMode) return;
+    setCarouselMode(mode);
+    setActiveSlide(0);
+    skipNextGlitch.current = false;
+  };
+
+  const goPrev = () => {
+    if (slideCount <= 1) return;
+    setActiveSlide((prev) => (prev - 1 + slideCount) % slideCount);
+  };
+
+  const goNext = () => {
+    if (slideCount <= 1) return;
+    setActiveSlide((prev) => (prev + 1) % slideCount);
+  };
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasMounted) return;
+
+    if (skipNextGlitch.current) {
+      skipNextGlitch.current = false;
+      return;
+    }
+
+    setIsGlitching(true);
+    setGlitchKey((key) => key + 1);
+
+    const timeout = window.setTimeout(() => {
+      setIsGlitching(false);
+    }, 450);
+
+    return () => window.clearTimeout(timeout);
+  }, [activeSlide, carouselMode, hasMounted]);
+
+  useEffect(() => {
+    if (!hasMounted || slideCount <= 1) return;
+
+    const timer = window.setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % slideCount);
+    }, 4500);
+
+    return () => window.clearInterval(timer);
+  }, [slideCount, activeSlide, hasMounted, carouselMode]);
+
+  return (
+    <div className="bg-tactical relative min-h-full flex flex-col">
+      <ScrollProgress />
+
+      <div
+        aria-hidden
+        className="pointer-events-none fixed top-0 left-1/2 z-0 h-[65vh] w-[95vw] -translate-x-1/2 bg-[radial-gradient(ellipse_at_center,oklch(0.96_0.025_350/0.2),transparent_68%)]"
+      />
+      <motion.div
+        aria-hidden
+        style={{ opacity: scrollMist }}
+        className="pointer-events-none fixed inset-0 z-0 bg-[oklch(0.18_0.04_350)]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-0 h-[40vh] bg-[linear-gradient(to_top,oklch(0.19_0.042_350/0.55),transparent)]"
+      />
+
+      <header className="sticky top-0 z-40 border-b border-primary/15 glass-panel">
+        <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
+          <BrandMark href="#hero" priority />
+          <div className="hidden items-center gap-8 md:flex">
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="hud-label transition-colors hover:text-primary"
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+          <Button
+            size="sm"
+            className="rounded-sm bg-primary font-medium text-primary-foreground hover:bg-primary/90"
+            nativeButton={false}
+            render={<a href="#newsletter" />}
+          >
+            Connect
+          </Button>
+        </nav>
+      </header>
+
+      <main className="relative z-10 flex-1">
+        <section
+          id="hero"
+          className="relative scroll-mt-14 overflow-hidden px-6 pb-24 pt-20 md:pb-32 md:pt-28"
+        >
+          {activeBackground ? (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeBackground}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.45 }}
+                  className="absolute inset-0"
+                >
+                  <ProtectedImage
+                    src={activeBackground}
+                    alt=""
+                    fill
+                    sizes="100vw"
+                    className="object-cover opacity-45 blur-[9px] scale-110"
+                    priority
+                  />
+                </motion.div>
+              </AnimatePresence>
+              <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/70 to-background/35" />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-background/80" />
+            </div>
+          ) : null}
+
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-20 left-1/2 h-[420px] w-[700px] -translate-x-1/2 rounded-full bg-[oklch(0.95_0.03_350/0.12)] blur-3xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute top-1/3 right-0 h-[480px] w-[480px] -translate-y-1/2 rounded-full bg-primary/10 blur-3xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute bottom-0 left-0 h-[360px] w-[360px] rounded-full bg-accent/10 blur-3xl"
+          />
+
+          <div className="relative mx-auto max-w-6xl">
+            <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
+              <motion.div
+                initial={{ opacity: 0, x: -24 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                className="relative z-10"
+              >
+                <Badge
+                  variant="outline"
+                  className="mb-6 gap-2 rounded-sm border-primary/40 bg-background/50 px-3 py-1 text-primary backdrop-blur-sm"
+                >
+                  <Heart className="size-3" />
+                  <span className="hud-label text-primary">Personal Studio</span>
+                </Badge>
+
+                <div className="relative mb-6 h-20 w-[min(100%,420px)] sm:h-24 sm:w-[480px] md:h-28 md:w-[560px]">
+                  <ProtectedImage
+                    src="/games-img/studio-full.png"
+                    alt="Studio Zero"
+                    fill
+                    sizes="(max-width: 768px) 90vw, 560px"
+                    className="object-contain object-left"
+                    priority
+                  />
+                </div>
+
+                <h1 className="font-display text-4xl leading-tight font-semibold tracking-tight text-foreground drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)] md:text-5xl lg:text-6xl">
+                  Where{" "}
+                  <span className="text-gradient-tactical">
+                    Anime and Games Connect
+                  </span>
+                </h1>
+
+                <p className="mt-6 max-w-md text-base leading-relaxed text-foreground/85 md:text-lg">
+                  My own mini studio for the hobbies that shaped me. collecting
+                  the games I play, the anime I love, and the ideas that grow
+                  between them.
+                </p>
+
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Button
+                    size="lg"
+                    className="rounded-sm px-6"
+                    nativeButton={false}
+                    render={<a href="#features" />}
+                  >
+                    <Sparkles className="size-4" />
+                    Explore Studio
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="rounded-sm border-primary/30 bg-background/40 px-6 backdrop-blur-sm hover:bg-primary/10"
+                    nativeButton={false}
+                    render={<a href="#media" />}
+                  >
+                    <Clapperboard className="size-4" />
+                    View Archive
+                  </Button>
+                </div>
+
+                <div className="mt-10 flex flex-wrap gap-6 border-t border-primary/15 pt-6">
+                  {hudStats.map((stat) => (
+                    <div key={stat.label}>
+                      <p className="hud-label">{stat.label}</p>
+                      <p className="mt-1 font-mono-hud text-sm text-foreground">
+                        {stat.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{
+                  duration: 0.8,
+                  delay: 0.15,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                className="relative mx-auto w-full max-w-md"
+              >
+                {/* Games / Anime switch */}
+                <div className="mb-4 flex items-center justify-center gap-1 rounded-sm border border-primary/20 bg-background/40 p-1 backdrop-blur-sm">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={carouselMode === "games" ? "default" : "ghost"}
+                    onClick={() => switchMode("games")}
+                    className="flex-1 rounded-sm"
+                  >
+                    <Gamepad2 className="size-3.5" />
+                    Games
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={carouselMode === "anime" ? "default" : "ghost"}
+                    onClick={() => switchMode("anime")}
+                    className="flex-1 rounded-sm"
+                  >
+                    <Tv className="size-3.5" />
+                    Anime
+                  </Button>
+                </div>
+
+                <div className="relative aspect-square w-full overflow-hidden">
+                  {currentSlide ? (
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={`${carouselMode}-${currentSlide.src}`}
+                        initial={{ opacity: 0, scale: 0.96 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.96 }}
+                        transition={{
+                          duration: 0.35,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        className={cn(
+                          "absolute inset-0 z-10",
+                          isGlitching && "glitch-image"
+                        )}
+                      >
+                        <ProtectedImage
+                          src={currentSlide.src}
+                          alt={currentSlide.alt}
+                          fill
+                          sizes="(max-width: 768px) 90vw, 448px"
+                          className="object-contain"
+                          priority
+                        />
+                      </motion.div>
+                    </AnimatePresence>
+                  ) : (
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 border border-primary/15 bg-card/40 p-6 text-center backdrop-blur-sm">
+                      <Tv className="size-8 text-primary/70" />
+                      <p className="font-display text-xl">Anime archive</p>
+                      <p className="max-w-xs text-sm text-muted-foreground">
+                        Coming soon — drop your anime visuals into{" "}
+                        <span className="font-mono-hud text-xs text-primary">
+                          /games-img
+                        </span>{" "}
+                        and add them to the list.
+                      </p>
+                    </div>
+                  )}
+
+                  {isGlitching ? (
+                    <div
+                      key={glitchKey}
+                      aria-hidden
+                      className="glitch-overlay is-active"
+                    >
+                      <div className="glitch-scanlines" />
+                      <div className="glitch-noise" />
+                    </div>
+                  ) : null}
+
+                  {slideCount > 1 ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        onClick={goPrev}
+                        className="absolute top-1/2 left-2 z-30 -translate-y-1/2 rounded-full border-primary/30 bg-background/50 text-foreground hover:bg-primary/15 hover:text-primary"
+                        aria-label="Previous slide"
+                      >
+                        <ChevronLeft className="size-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        onClick={goNext}
+                        className="absolute top-1/2 right-2 z-30 -translate-y-1/2 rounded-full border-primary/30 bg-background/50 text-foreground hover:bg-primary/15 hover:text-primary"
+                        aria-label="Next slide"
+                      >
+                        <ChevronRight className="size-4" />
+                      </Button>
+                    </>
+                  ) : null}
+                </div>
+
+                {currentSlide?.title ? (
+                  <p className="mt-3 text-center font-mono-hud text-xs tracking-widest text-muted-foreground uppercase">
+                    {carouselMode === "games" ? "Played" : "Watched"} //{" "}
+                    {currentSlide.title}
+                  </p>
+                ) : null}
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        <section id="features" className="scroll-mt-14 px-6 py-20 md:py-28">
+          <div className="mx-auto max-w-6xl">
+            <FadeIn>
+              <p className="hud-label text-primary">About Studio Zero</p>
+              <h2 className="font-display mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
+                A studio built from hobbies
+              </h2>
+              <p className="mt-4 max-w-xl text-muted-foreground md:text-lg">
+                Not a company, just me, collecting what I love and turning it
+                into a space that feels like home.
+              </p>
+            </FadeIn>
+
+            <div className="mt-14 grid gap-4 md:grid-cols-3">
+              {features.map((feature, i) => (
+                <FadeIn key={feature.title} delay={i * 0.1}>
+                  <HudFrame className="h-full">
+                    <Card className="h-full rounded-sm border-0 bg-transparent shadow-none">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div className="flex size-10 items-center justify-center rounded-sm border border-primary/30 bg-primary/10 text-primary">
+                            <feature.icon className="size-4" />
+                          </div>
+                          <span className="hud-label text-primary/60">
+                            {feature.code}
+                          </span>
+                        </div>
+                        <CardTitle className="font-display text-xl font-medium">
+                          {feature.title}
+                        </CardTitle>
+                        <CardDescription className="text-base leading-relaxed">
+                          {feature.description}
+                        </CardDescription>
+                      </CardHeader>
+                    </Card>
+                  </HudFrame>
+                </FadeIn>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <Separator className="mx-auto max-w-6xl bg-primary/15" />
+
+        <section id="gameplay" className="scroll-mt-14 px-6 py-20 md:py-28">
+          <div className="mx-auto max-w-6xl">
+            <FadeIn className="text-center">
+              <p className="hud-label text-accent">Creative Flow</p>
+              <h2 className="font-display mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
+                How inspiration moves
+              </h2>
+              <p className="mx-auto mt-4 max-w-xl text-muted-foreground md:text-lg">
+                From the next game I boot up to the next show I finish this is
+                the loop behind Studio Zero.
+              </p>
+            </FadeIn>
+
+            <div className="mt-14 grid gap-px overflow-hidden rounded-sm border border-primary/15 bg-primary/10 sm:grid-cols-2 lg:grid-cols-4">
+              {loopSteps.map((item, i) => (
+                <FadeIn key={item.phase} delay={i * 0.08}>
+                  <div className="h-full bg-card/70 p-6 backdrop-blur-sm transition-colors hover:bg-card/85">
+                    <p className="hud-label text-primary">{item.phase}</p>
+                    <h3 className="mt-3 font-display text-lg font-medium">
+                      {item.label}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                      {item.detail}
+                    </p>
+                  </div>
+                </FadeIn>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="media" className="scroll-mt-14 px-6 py-20 md:py-28">
+          <div className="mx-auto max-w-6xl">
+            <FadeIn>
+              <p className="hud-label text-primary">Archive</p>
+              <h2 className="font-display mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
+                Collection in progress
+              </h2>
+              <p className="mt-4 max-w-xl text-muted-foreground md:text-lg">
+                Games first. Anime next. More entries unlock as I keep building
+                this space.
+              </p>
+            </FadeIn>
+
+            <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                { label: "Games played", status: "ACTIVE" },
+                { label: "Anime watched", status: "COMING SOON" },
+                { label: "Studio notes", status: "SOLO LOG" },
+              ].map((item, i) => (
+                <FadeIn key={item.label} delay={i * 0.1}>
+                  <HudFrame className="group glass-panel aspect-[4/3] overflow-hidden transition-colors hover:border-primary/30">
+                    <div className="flex h-full flex-col justify-between p-5">
+                      <span className="hud-label text-primary/50">
+                        FILE // 0{i + 1}
+                      </span>
+                      <div>
+                        <p className="font-display text-lg font-medium">
+                          {item.label}
+                        </p>
+                        <p className="mt-1 font-mono-hud text-xs text-muted-foreground">
+                          {item.status}
+                        </p>
+                      </div>
+                    </div>
+                  </HudFrame>
+                </FadeIn>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="newsletter" className="scroll-mt-14 px-6 py-20 md:py-28">
+          <FadeIn>
+            <HudFrame className="mx-auto max-w-3xl glass-panel p-8 md:p-12">
+              <div className="text-center">
+                <p className="hud-label text-accent">Stay Connected</p>
+                <h2 className="font-display mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
+                  Follow the studio
+                </h2>
+                <p className="mx-auto mt-4 max-w-md text-muted-foreground md:text-lg">
+                  Occasional updates on what I’m playing, watching, and building
+                  , no spam, just Studio Zero.
+                </p>
+                <div className="mx-auto mt-8 flex max-w-md flex-col gap-3 sm:flex-row">
+                  <input
+                    type="email"
+                    placeholder="you@email.com"
+                    className="h-10 flex-1 rounded-sm border border-primary/15 bg-background/50 px-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20"
+                  />
+                  <Button className="rounded-sm px-6">
+                    <Mail className="size-4" />
+                    Subscribe
+                  </Button>
+                </div>
+              </div>
+            </HudFrame>
+          </FadeIn>
+        </section>
+      </main>
+
+      <footer className="relative z-10 overflow-x-hidden border-t border-primary/15 bg-[oklch(0.19_0.042_350/0.92)] backdrop-blur-sm">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 z-20 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent"
+        />
+
+        {/* Games hover art — left character */}
+        <div
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-y-0 left-0 z-0 w-[min(48%,360px)] overflow-hidden transition-all duration-500 ease-out md:w-[min(42%,420px)]",
+            showFooterGamesArt
+              ? "translate-x-0 opacity-100"
+              : "-translate-x-8 opacity-0"
+          )}
+        >
+          {/* Image sits slightly shorter inside the same frame */}
+          <div className="absolute inset-x-0 bottom-0 top-[12%]">
+            <ProtectedImage
+              key={footerArtPair.left.src}
+              src={footerArtPair.left.src}
+              alt=""
+              fill
+              sizes="420px"
+              className={cn(
+                footerArtPair.left.className,
+                "mix-blend-lighten opacity-70"
+              )}
+            />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent from-10% via-[oklch(0.19_0.042_350/0.25)] via-45% to-[oklch(0.19_0.042_350/0.92)]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.19_0.042_350/0.55)] via-transparent to-[oklch(0.19_0.042_350/0.35)]" />
+        </div>
+        {/* Games hover art — right character */}
+        <div
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-y-0 right-0 z-0 w-[min(48%,360px)] overflow-hidden transition-all duration-500 ease-out md:w-[min(42%,420px)]",
+            showFooterGamesArt
+              ? "translate-x-0 opacity-100"
+              : "translate-x-8 opacity-0"
+          )}
+        >
+          <div className="absolute inset-x-0 bottom-0 top-[12%]">
+            <ProtectedImage
+              key={footerArtPair.right.src}
+              src={footerArtPair.right.src}
+              alt=""
+              fill
+              sizes="420px"
+              className={cn(
+                footerArtPair.right.className,
+                "mix-blend-lighten opacity-70"
+              )}
+            />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-l from-transparent from-10% via-[oklch(0.19_0.042_350/0.25)] via-45% to-[oklch(0.19_0.042_350/0.92)]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.19_0.042_350/0.55)] via-transparent to-[oklch(0.19_0.042_350/0.35)]" />
+        </div>
+
+        {/* Soft center veil — keeps copy readable without flattening the art */}
+        <div
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_center,oklch(0.19_0.042_350/0.72)_0%,oklch(0.19_0.042_350/0.35)_42%,transparent_72%)] transition-opacity duration-500",
+            showFooterGamesArt ? "opacity-100" : "opacity-0"
+          )}
+        />
+
+        <div className="relative z-10 mx-auto max-w-6xl px-6 pt-14 pb-8">
+          <div className="grid gap-12 md:grid-cols-[1.35fr_repeat(3,minmax(0,1fr))] md:gap-10">
+            {/* Brand */}
+            <div className="max-w-sm">
+              <BrandMark href="#hero" />
+              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                A personal mini studio for the games I play, the anime I love,
+                and the ideas that grow between them.
+              </p>
+              <p className="mt-3 font-display text-sm text-primary/90">
+                Where Anime and Games Connect
+              </p>
+              <Button
+                size="sm"
+                className="mt-6 rounded-sm"
+                nativeButton={false}
+                render={<a href="#newsletter" />}
+              >
+                <Mail className="size-3.5" />
+                Stay connected
+              </Button>
+            </div>
+
+            {/* Explore */}
+            <div>
+              <p className="hud-label text-primary">Explore</p>
+              <ul className="mt-4 space-y-2.5">
+                {navLinks.map((link) => (
+                  <li key={link.href}>
+                    <a
+                      href={link.href}
+                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+                <li>
+                  <a
+                    href="#hero"
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    Intro
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Archive */}
+            <div>
+              <p className="hud-label text-accent">Archive</p>
+              <ul className="mt-4 space-y-3">
+                {footerArchive.map((item) => (
+                  <li key={item.label}>
+                    <a
+                      href={item.href}
+                      className="group block"
+                      onMouseEnter={
+                        "revealArt" in item && item.revealArt
+                          ? revealFooterGamesArt
+                          : undefined
+                      }
+                      onMouseLeave={
+                        "revealArt" in item && item.revealArt
+                          ? hideFooterGamesArt
+                          : undefined
+                      }
+                      onFocus={
+                        "revealArt" in item && item.revealArt
+                          ? showFooterGamesArtOnly
+                          : undefined
+                      }
+                      onBlur={
+                        "revealArt" in item && item.revealArt
+                          ? hideFooterGamesArt
+                          : undefined
+                      }
+                    >
+                      <span className="text-sm text-foreground/90 transition-colors group-hover:text-primary">
+                        {item.label}
+                      </span>
+                      <span className="mt-0.5 block text-xs text-muted-foreground">
+                        {item.detail}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Studio */}
+            <div>
+              <p className="hud-label text-primary">Studio</p>
+              <ul className="mt-4 space-y-3">
+                {footerStudio.map((item) => (
+                  <li
+                    key={item.label}
+                    className="flex items-baseline justify-between gap-3 border-b border-primary/10 pb-2 last:border-0 last:pb-0"
+                  >
+                    <span className="hud-label text-muted-foreground">
+                      {item.label}
+                    </span>
+                    <span className="text-right text-sm text-foreground/85">
+                      {item.value}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
+                <Heart className="size-3 text-primary/70" />
+                Built solo, updated as I go
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-12 flex flex-col items-start justify-between gap-4 border-t border-primary/10 pt-6 sm:flex-row sm:items-center">
+            <p className="hud-label">
+              © {new Date().getFullYear()} Studio Zero
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Personal project not affiliated with any game or anime studio.
+            </p>
+            <a
+              href="#hero"
+              className="hud-label text-primary/80 transition-colors hover:text-primary"
+            >
+              Back to top
+            </a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

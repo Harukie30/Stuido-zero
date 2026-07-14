@@ -18,27 +18,30 @@ type CollageTile = {
 const COLLAGE_TILES: CollageTile[] = [
   {
     src: "/footer-anime/anime-3.png", // Rosaria — upper left, extends behind bottom row
-    className: "top-[2%] right-[36%] h-[68%] w-[48%] -rotate-[2deg] z-[1]",
-    objectClassName: "object-cover object-[92%_8%] scale-[1.08]",
+    className: "top-[2%] right-[43%] h-[68%] w-[48%] -rotate-[2deg] z-[1]",
+    objectClassName: "object-cover object-[100%_8%] scale-[1.25] -translate-x-[12%]",
     tileClassName: "hover-collage-tile--rosaria",
     delayMs: 60,
   },
   {
     src: "/footer-anime/anime-4.png", // Albedo — upper right, extends behind bottom row
-    className: "top-[4%] right-[2%] h-[68%] w-[48%] rotate-[2deg] z-[1]",
-    objectClassName: "object-cover object-[42%_10%] scale-[1.05]",
+    className: "top-[4%] -right-[2%] h-[68%] w-[48%] rotate-[2deg] z-[1]",
+    objectClassName: "object-cover object-[48%_18%] scale-[0.85]",
+    tileClassName: "hover-collage-tile--albedo",
     delayMs: 120,
   },
   {
-    src: "/footer-anime/anime-5.png", // Endmin — sits in front of top pair
+    src: "/footer-anime/endmin-nw.png", // Endmin — sits in front of top pair
     className: "top-[50%] right-[28%] h-[42%] w-[52%] rotate-[2deg] z-[3]",
-    objectClassName: "object-cover object-[65%_32%] scale-[1.1]",
+    objectClassName: "object-cover object-[50%_12%] scale-[1.08]",
+    tileClassName: "hover-collage-tile--endmin",
     delayMs: 180,
   },
   {
     src: "/footer-anime/anime-6.png", // Yvone — sits in front of top pair
     className: "top-[54%] right-[2%] h-[44%] w-[54%] -rotate-[3deg] z-[4]",
     objectClassName: "object-cover object-[50%_14%] scale-[1.06]",
+    tileClassName: "hover-collage-tile--bottom",
     delayMs: 240,
   },
 ];

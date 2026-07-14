@@ -7,7 +7,6 @@ import { SakuraPetals } from "@/components/landing/sakura-petals";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const BOOT_LINES = [
@@ -18,6 +17,12 @@ const BOOT_LINES = [
 ] as const;
 
 const MIN_DURATION_MS = 2400;
+const CONNECTED_GLITCH_MS = 700;
+const CONNECTED_HOLD_MS = 480;
+const SYSTEM_ONLINE_MS = 1100;
+const ACCESS_GRANTED_MS = 980;
+/** Hold after the scan/auth beat before blur exit */
+const ACCESS_GRANTED_HOLD_MS = 2000;
 const EXPAND_MS = 620;
 const BUTTON_DELAY_MS = 280;
 
@@ -28,6 +33,9 @@ type LoadingScreenProps = {
 export function LoadingScreen({ onComplete }: LoadingScreenProps) {
   const reduceMotion = useReducedMotion();
   const [visible, setVisible] = useState(true);
+  const [showConnected, setShowConnected] = useState(false);
+  const [showSystemOnline, setShowSystemOnline] = useState(false);
+  const [showAccessGranted, setShowAccessGranted] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [showEnter, setShowEnter] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -39,13 +47,20 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
   useEffect(() => {
     if (reduceMotion) {
       setProgress(100);
-      setExpanded(true);
-      const t = window.setTimeout(() => setShowEnter(true), 120);
-      return () => window.clearTimeout(t);
+      setShowConnected(true);
+      setShowSystemOnline(true);
+      const onlineTimer = window.setTimeout(() => {
+        setShowSystemOnline(false);
+        setExpanded(true);
+        setShowEnter(true);
+      }, 200);
+      return () => window.clearTimeout(onlineTimer);
     }
 
     const start = performance.now();
     let frame = 0;
+    let connectedTimer = 0;
+    let systemTimer = 0;
     let expandTimer = 0;
     let buttonTimer = 0;
 
@@ -63,18 +78,28 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
       if (next < 100) {
         frame = requestAnimationFrame(tick);
       } else {
-        expandTimer = window.setTimeout(() => {
-          setExpanded(true);
-          buttonTimer = window.setTimeout(() => {
-            setShowEnter(true);
-          }, EXPAND_MS + BUTTON_DELAY_MS);
-        }, 180);
+        // CONNECTED glitch → SYSTEM ONLINE overlay → expand
+        connectedTimer = window.setTimeout(() => {
+          setShowConnected(true);
+          systemTimer = window.setTimeout(() => {
+            setShowSystemOnline(true);
+            expandTimer = window.setTimeout(() => {
+              setShowSystemOnline(false);
+              setExpanded(true);
+              buttonTimer = window.setTimeout(() => {
+                setShowEnter(true);
+              }, EXPAND_MS + BUTTON_DELAY_MS);
+            }, SYSTEM_ONLINE_MS);
+          }, CONNECTED_GLITCH_MS + CONNECTED_HOLD_MS);
+        }, 160);
       }
     };
 
     frame = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(frame);
+      window.clearTimeout(connectedTimer);
+      window.clearTimeout(systemTimer);
       window.clearTimeout(expandTimer);
       window.clearTimeout(buttonTimer);
     };
@@ -88,6 +113,18 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
       document.body.style.overflow = prev;
     };
   }, [visible]);
+
+  // Idle glitch pulse on Enter Studio every 3s
+  useEffect(() => {
+    if (!showEnter || reduceMotion) return;
+
+    const pulse = window.setInterval(() => {
+      setIsGlitching(false);
+      requestAnimationFrame(() => setIsGlitching(true));
+    }, 4500);
+
+    return () => window.clearInterval(pulse);
+  }, [showEnter, reduceMotion]);
 
   const triggerGlitch = () => {
     if (reduceMotion) return;
@@ -112,10 +149,15 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
   };
 
   const enterStudio = () => {
+    if (showAccessGranted || !visible) return;
     setShowArt(false);
     setIsGlitching(false);
-    setVisible(false);
-    window.setTimeout(finish, 700);
+    setShowAccessGranted(true);
+
+    window.setTimeout(() => {
+      setVisible(false);
+      window.setTimeout(finish, 700);
+    }, reduceMotion ? 200 : ACCESS_GRANTED_MS + ACCESS_GRANTED_HOLD_MS);
   };
 
   const activeLine = BOOT_LINES[lineIndex] ?? BOOT_LINES[0];
@@ -177,6 +219,149 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
           {/* Right hover — full-side games + anime collage */}
           <HoverCollage active={showArt} />
 
+          {/* SYSTEM ONLINE overlay — clean HUD stamp after CONNECTED */}
+          <AnimatePresence>
+            {showSystemOnline ? (
+              <motion.div
+                key="system-online"
+                className="pointer-events-none absolute inset-0 z-[20] flex items-center justify-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.35, ease } }}
+                transition={{ duration: 0.4, ease }}
+              >
+                <div className="absolute inset-0 bg-[oklch(0.16_0.04_350/0.72)] backdrop-blur-[2px]" />
+                <div className="relative px-6 text-center">
+                  <motion.p
+                    className="hud-label mb-4 text-primary/80"
+                    initial={
+                      reduceMotion ? false : { opacity: 0, y: 6 }
+                    }
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.45, ease, delay: 0.05 }}
+                  >
+                    SZ-CORE
+                  </motion.p>
+                  <motion.p
+                    className="font-display text-2xl font-semibold text-foreground sm:text-3xl"
+                    initial={
+                      reduceMotion
+                        ? false
+                        : { opacity: 0, letterSpacing: "0.06em" }
+                    }
+                    animate={{ opacity: 1, letterSpacing: "0.22em" }}
+                    transition={{
+                      duration: 0.75,
+                      ease,
+                      delay: 0.12,
+                    }}
+                  >
+                    SYSTEM ONLINE
+                  </motion.p>
+                  <motion.div
+                    className="mx-auto mt-4 h-px w-24 bg-gradient-to-r from-transparent via-primary/60 to-transparent"
+                    initial={reduceMotion ? false : { scaleX: 0, opacity: 0 }}
+                    animate={{ scaleX: 1, opacity: 1 }}
+                    transition={{ duration: 0.55, ease, delay: 0.35 }}
+                  />
+                  <motion.p
+                    className="mt-4 font-mono-hud text-[11px] tracking-[0.24em] text-primary/85"
+                    initial={reduceMotion ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, ease, delay: 0.45 }}
+                  >
+                    ARCHIVE · LINKED
+                  </motion.p>
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+
+          {/* ACCESS GRANTED — scan authorize after Enter Studio */}
+          <AnimatePresence>
+            {showAccessGranted ? (
+              <motion.div
+                key="access-granted"
+                className="pointer-events-none absolute inset-0 z-[30] flex items-center justify-center overflow-hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3, ease }}
+              >
+                <motion.div
+                  className="absolute inset-0 bg-[oklch(0.16_0.04_350/0.78)] backdrop-blur-[1px]"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.25 }}
+                />
+
+                {/* Auth scan line — sweeps once top → bottom */}
+                {!reduceMotion ? (
+                  <motion.div
+                    aria-hidden
+                    className="absolute inset-x-0 z-[2] h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_18px_oklch(0.78_0.11_15/0.65)]"
+                    initial={{ top: "-2%", opacity: 0 }}
+                    animate={{
+                      top: ["0%", "100%"],
+                      opacity: [0, 1, 1, 0],
+                    }}
+                    transition={{
+                      duration: 0.85,
+                      ease: [0.22, 1, 0.36, 1],
+                      times: [0, 0.12, 0.82, 1],
+                    }}
+                  />
+                ) : null}
+
+                {/* Soft trail wash behind the scan */}
+                {!reduceMotion ? (
+                  <motion.div
+                    aria-hidden
+                    className="absolute inset-x-0 top-0 z-[1] h-full bg-gradient-to-b from-primary/10 via-transparent to-transparent"
+                    initial={{ opacity: 0, clipPath: "inset(0 0 100% 0)" }}
+                    animate={{ opacity: 1, clipPath: "inset(0 0 0% 0)" }}
+                    transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
+                  />
+                ) : null}
+
+                <div className="relative z-[3] px-6 text-center">
+                  <motion.p
+                    className="hud-label mb-3 text-primary"
+                    initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease, delay: 0.28 }}
+                  >
+                    SZ-AUTH
+                  </motion.p>
+                  <motion.p
+                    className="font-display text-2xl font-semibold tracking-[0.18em] text-foreground sm:text-4xl"
+                    initial={
+                      reduceMotion ? false : { opacity: 0, y: 16 }
+                    }
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, ease, delay: 0.36 }}
+                  >
+                    ACCESS GRANTED
+                  </motion.p>
+                  <motion.div
+                    className="mx-auto mt-4 h-px w-28 bg-gradient-to-r from-transparent via-primary/70 to-transparent"
+                    initial={reduceMotion ? false : { scaleX: 0, opacity: 0 }}
+                    animate={{ scaleX: 1, opacity: 1 }}
+                    transition={{ duration: 0.4, ease, delay: 0.48 }}
+                  />
+                  <motion.p
+                    className="mt-3 font-mono-hud text-[11px] tracking-[0.28em] text-primary"
+                    initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease, delay: 0.55 }}
+                  >
+                    WELCOME TO STUDIO ZERO
+                  </motion.p>
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+
           <motion.div
             layout
             className="relative z-10 max-w-[calc(100vw-2rem)]"
@@ -207,7 +392,13 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
                 )}
               >
                 <p className="hud-label text-primary">
-                  {showEnter ? "SZ-READY" : expanded ? "SZ-OPEN" : "SZ-BOOT"}
+                  {showEnter
+                    ? "SZ-READY"
+                    : expanded
+                      ? "SZ-OPEN"
+                      : showConnected
+                        ? "SZ-LINK"
+                        : "SZ-BOOT"}
                 </p>
                 <p className="hud-label">{Math.round(progress)}%</p>
               </div>
@@ -241,12 +432,36 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
                   />
                 </div>
                 {!expanded ? (
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-mono-hud truncate text-[11px] text-foreground/80">
-                      {activeLine.label}
-                    </p>
-                    <p className="hud-label shrink-0">LOADING</p>
-                  </div>
+                  showConnected ? (
+                    <motion.div
+                      className="flex flex-col items-center justify-center gap-2 py-3 text-center"
+                      initial={
+                        reduceMotion ? false : { opacity: 0, scale: 0.96 }
+                      }
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.35, ease }}
+                    >
+                      <p className="hud-label text-primary/75">LINK STATUS</p>
+                      <p
+                        data-glitch="CONNECTED"
+                        className={cn(
+                          "font-display text-base font-semibold tracking-[0.28em] text-foreground sm:text-lg",
+                          !reduceMotion && "connected-glitch"
+                        )}
+                      >
+                        CONNECTED
+                      </p>
+                      <div className="h-px w-16 bg-gradient-to-r from-transparent via-primary/55 to-transparent" />
+                      <p className="hud-label text-primary">ONLINE</p>
+                    </motion.div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-mono-hud truncate text-[11px] text-foreground/80">
+                        {activeLine.label}
+                      </p>
+                      <p className="hud-label shrink-0">LOADING</p>
+                    </div>
+                  )
                 ) : null}
               </div>
 
@@ -309,7 +524,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
                       <Button
                         type="button"
                         size="lg"
-                        data-glitch="Enter Studio"
+                        data-glitch="ENTER STUDIO"
                         className={cn(
                           "relative z-10 w-full rounded-sm px-6 cursor-pointer",
                           isGlitching && "enter-glitch"

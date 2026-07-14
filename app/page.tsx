@@ -51,11 +51,50 @@ const gameSlides: HeroSlide[] = [
     alt: "Arknights Endfield",
     title: "Arknights: Endfield",
   },
+  {
+    src: "/games-img/lol logo.png",
+    background: "/games-img/lol back.png",
+    alt: "League of Legends",
+    title: "League of Legends",
+  },
+  {
+    src: "/games-img/pubgg.png",
+    background: "/games-img/pubg back.jpg",
+    alt: "PUBG: Battlegrounds",
+    title: "PUBG: Battlegrounds",
+  },
+  {
+    src: "/games-img/overw logo.png",
+    background: "/games-img/overw back.jpg",
+    alt: "Overwatch 2",
+    title: "Overwatch 2",
+  },
+  {
+    src: "/games-img/TFT.png",
+    background: "/games-img/TFT back.jpg",
+    alt: "Teamfight Tactics",
+    title: "Teamfight Tactics",
+  },
+  {
+    src: "/games-img/heart logo.png",
+    background: "/games-img/heart back.jpg",
+    alt: "Heartstone",
+    title: "Heartstone",
+  },
+  {
+    src: "/games-img/prag.png",
+    background: "/games-img/prag back.jpg",
+    alt: "Pragmata",
+    title: "Pragmata",
+  },
 ];
 
 // Add your anime key visuals here later:
 // { src: "/games-img/anime1.png", background: "/games-img/anime1-bg.jpg", alt: "...", title: "..." }
-const animeSlides: HeroSlide[] = [];
+const animeSlides: HeroSlide[] = [
+
+
+];
 
 const features = [
   {
@@ -127,7 +166,7 @@ const footerGameArtPairs = [
   {
     left: {
       src: "/footer-anime/anime-4.png",
-      className: "object-cover object-[72%_6%] scale-[1.35]",
+      className: "object-cover object-[180%_6%] scale-[1.35]",
     },
     right: {
       src: "/footer-anime/anime-3.png",
@@ -136,12 +175,12 @@ const footerGameArtPairs = [
   },
   {
     left: {
-      src: "/footer-anime/anime-5.png",
-      className: "object-cover object-[62%_8%] scale-[1.25] translate-y-[10%]",
+      src: "/footer-anime/endmin-nw.png",
+      className: "object-cover object-[50%_2%] scale-[1.2]",
     },
     right: {
       src: "/footer-anime/anime-6.png",
-      className: "object-cover object-[50%_18%] scale-[1.3]",
+      className: "object-cover object-[70%_28%] scale-[1.3]",
     },
   },
 ] as const;
@@ -169,6 +208,7 @@ export default function Home() {
   const [bootDone, setBootDone] = useState(false);
   const [showFooterGamesArt, setShowFooterGamesArt] = useState(false);
   const [footerGamesHoverCount, setFooterGamesHoverCount] = useState(0);
+  const [clearanceOpen, setClearanceOpen] = useState(false);
   const skipNextGlitch = useRef(true);
 
   // Hover 1–2 → pair 0, hover 3–4 → pair 1, then loops
@@ -355,7 +395,7 @@ export default function Home() {
                   variant="outline"
                   className="mb-6 gap-2 rounded-sm border-primary/40 bg-background/50 px-3 py-1 text-primary backdrop-blur-sm"
                 >
-                  <Heart className="size-3" />
+                  
                   <span className="hud-label text-primary">Personal Studio</span>
                 </Badge>
 
@@ -704,7 +744,7 @@ export default function Home() {
           )}
         >
           {/* Image sits slightly shorter inside the same frame */}
-          <div className="absolute inset-x-0 bottom-0 top-[12%]">
+          <div className="hover-art-fade-left absolute inset-x-0 bottom-0 top-[12%]">
             <ProtectedImage
               key={footerArtPair.left.src}
               src={footerArtPair.left.src}
@@ -717,7 +757,7 @@ export default function Home() {
               )}
             />
           </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent from-10% via-[oklch(0.19_0.042_350/0.25)] via-45% to-[oklch(0.19_0.042_350/0.92)]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[oklch(0.19_0.042_350/0.35)] from-0% via-[oklch(0.19_0.042_350/0.2)] via-40% to-[oklch(0.19_0.042_350/0.95)]" />
           <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.19_0.042_350/0.55)] via-transparent to-[oklch(0.19_0.042_350/0.35)]" />
         </div>
         {/* Games hover art — right character */}
@@ -730,7 +770,7 @@ export default function Home() {
               : "translate-x-8 opacity-0"
           )}
         >
-          <div className="absolute inset-x-0 bottom-0 top-[12%]">
+          <div className="hover-art-fade-right absolute inset-x-0 bottom-0 top-[12%]">
             <ProtectedImage
               key={footerArtPair.right.src}
               src={footerArtPair.right.src}
@@ -743,7 +783,7 @@ export default function Home() {
               )}
             />
           </div>
-          <div className="absolute inset-0 bg-gradient-to-l from-transparent from-10% via-[oklch(0.19_0.042_350/0.25)] via-45% to-[oklch(0.19_0.042_350/0.92)]" />
+          <div className="absolute inset-0 bg-gradient-to-l from-[oklch(0.19_0.042_350/0.35)] from-0% via-[oklch(0.19_0.042_350/0.2)] via-40% to-[oklch(0.19_0.042_350/0.95)]" />
           <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.19_0.042_350/0.55)] via-transparent to-[oklch(0.19_0.042_350/0.35)]" />
         </div>
 
@@ -871,16 +911,87 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-12 flex flex-col items-start justify-between gap-4 border-t border-primary/10 pt-6 sm:flex-row sm:items-center">
-            <p className="hud-label">
+          <div className="mt-12 flex flex-col items-start justify-between gap-6 border-t border-primary/10 pt-6 sm:flex-row sm:items-center">
+            <p className="hud-label shrink-0">
               © {new Date().getFullYear()} Studio Zero
             </p>
-            <p className="text-sm text-muted-foreground">
-              Personal project not affiliated with any game or anime studio.
-            </p>
+
+            <div className="mx-auto w-full max-w-md text-center sm:px-4">
+              <button
+                type="button"
+                aria-expanded={clearanceOpen}
+                aria-controls="sz-clearance"
+                onClick={() => setClearanceOpen((open) => !open)}
+                className={cn(
+                  "group inline-flex items-center gap-2.5 rounded-sm border px-3.5 py-1.5 transition-all",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                  clearanceOpen
+                    ? "border-primary/40 bg-primary/10 text-primary shadow-[0_0_20px_oklch(0.78_0.11_15/0.12)]"
+                    : "border-primary/20 bg-background/25 text-muted-foreground hover:border-primary/35 hover:text-primary"
+                )}
+              >
+                <span
+                  aria-hidden
+                  className={cn(
+                    "font-display text-[11px] leading-none transition-colors",
+                    clearanceOpen ? "text-primary" : "text-primary/60 group-hover:text-primary"
+                  )}
+                >
+                  ◆
+                </span>
+                <span className="hud-label text-[10px] tracking-[0.2em]">
+                  Transmission clearance
+                </span>
+                <span
+                  className={cn(
+                    "rounded-[2px] border px-1.5 py-0.5 font-mono-hud text-[9px] tracking-[0.22em] transition-colors",
+                    clearanceOpen
+                      ? "border-primary/45 bg-primary/15 text-primary"
+                      : "border-primary/25 bg-background/40 text-muted-foreground group-hover:border-primary/40 group-hover:text-primary"
+                  )}
+                >
+                  {clearanceOpen ? "OPEN" : "LOCKED"}
+                </span>
+              </button>
+
+              <AnimatePresence initial={false}>
+                {clearanceOpen ? (
+                  <motion.div
+                    id="sz-clearance"
+                    key="clearance"
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginTop: 14 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mb-3 flex items-center justify-center gap-3">
+                      <span
+                        aria-hidden
+                        className="h-px w-8 bg-gradient-to-r from-transparent to-primary/40"
+                      />
+                      <p className="hud-label text-primary/80">Seal released</p>
+                      <span
+                        aria-hidden
+                        className="h-px w-8 bg-gradient-to-l from-transparent to-primary/40"
+                      />
+                    </div>
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      Built without license, partnership, or sponsorship from
+                      any rights holder.
+                    </p>
+                    <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground/80">
+                      Fan love only. Worlds referenced belong to their
+                      creators.
+                    </p>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
+
             <a
               href="#hero"
-              className="hud-label text-primary/80 transition-colors hover:text-primary"
+              className="hud-label shrink-0 text-primary/80 transition-colors hover:text-primary sm:ml-auto"
             >
               Back to top
             </a>

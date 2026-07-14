@@ -139,9 +139,8 @@
   }
 
   .bg-tactical {
+    isolation: isolate;
     background:
-      linear-gradient(oklch(0.92 0.04 350 / 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, oklch(0.92 0.04 350 / 0.05) 1px, transparent 1px),
       radial-gradient(ellipse 110% 45% at 50% 0%, oklch(0.96 0.025 350 / 0.35), transparent 60%),
       radial-gradient(ellipse 60% 35% at 85% 12%, oklch(0.78 0.11 15 / 0.1), transparent),
       linear-gradient(
@@ -153,8 +152,42 @@
         oklch(0.25 0.038 350) 78%,
         oklch(0.21 0.042 350) 100%
       );
-    background-size: 48px 48px, 48px 48px, 100% 100vh, 100% 100vh, 100% 100%;
-    background-repeat: repeat, repeat, no-repeat, no-repeat, no-repeat;
+    background-size: 100% 100vh, 100% 100vh, 100% 100%;
+    background-repeat: no-repeat, no-repeat, no-repeat;
+  }
+
+  /* Soft breathing pulse on grid lines only.
+     Parent should already be positioned (relative/fixed) via utility classes —
+     do NOT set position here or it overrides Tailwind `fixed` on the boot screen. */
+  .bg-tactical::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(oklch(0.92 0.04 350 / 0.07) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.92 0.04 350 / 0.07) 1px, transparent 1px);
+    background-size: 48px 48px, 48px 48px;
+    background-repeat: repeat, repeat;
+    animation: tactical-grid-pulse 4.2s ease-in-out infinite;
+  }
+
+  @keyframes tactical-grid-pulse {
+    0%,
+    100% {
+      opacity: 0.42;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bg-tactical::before {
+      animation: none;
+      opacity: 0.7;
+    }
   }
 
   .glass-panel {
@@ -293,51 +326,261 @@
   /* Soft feathered collage tiles (no hard frame edges) */
   .hover-collage-tile {
     -webkit-mask-image: radial-gradient(
-      ellipse 72% 68% at 50% 45%,
-      #000 28%,
-      rgba(0, 0, 0, 0.75) 52%,
-      transparent 78%
+      ellipse 78% 74% at 50% 46%,
+      #000 38%,
+      rgba(0, 0, 0, 0.78) 62%,
+      rgba(0, 0, 0, 0.35) 80%,
+      transparent 92%
     );
     mask-image: radial-gradient(
-      ellipse 72% 68% at 50% 45%,
-      #000 28%,
-      rgba(0, 0, 0, 0.75) 52%,
-      transparent 78%
+      ellipse 78% 74% at 50% 46%,
+      #000 38%,
+      rgba(0, 0, 0, 0.78) 62%,
+      rgba(0, 0, 0, 0.35) 80%,
+      transparent 92%
     );
   }
 
-  /* Rosaria only — extra dissolve on the right edge toward Albedo */
+  /* Rosaria — ~7% right fade + soft overall feather */
   .hover-collage-tile--rosaria {
     -webkit-mask-image:
       radial-gradient(
-        ellipse 72% 68% at 50% 45%,
-        #000 28%,
-        rgba(0, 0, 0, 0.75) 52%,
-        transparent 78%
+        ellipse 78% 74% at 50% 46%,
+        #000 38%,
+        rgba(0, 0, 0, 0.78) 62%,
+        rgba(0, 0, 0, 0.35) 80%,
+        transparent 92%
       ),
       linear-gradient(
         to right,
         #000 0%,
-        #000 48%,
-        rgba(0, 0, 0, 0.55) 68%,
-        transparent 92%
+        #000 93%,
+        rgba(0, 0, 0, 0.45) 97%,
+        transparent 100%
       );
     mask-image:
       radial-gradient(
-        ellipse 72% 68% at 50% 45%,
-        #000 28%,
-        rgba(0, 0, 0, 0.75) 52%,
-        transparent 78%
+        ellipse 78% 74% at 50% 46%,
+        #000 38%,
+        rgba(0, 0, 0, 0.78) 62%,
+        rgba(0, 0, 0, 0.35) 80%,
+        transparent 92%
       ),
       linear-gradient(
         to right,
         #000 0%,
-        #000 48%,
-        rgba(0, 0, 0, 0.55) 68%,
-        transparent 92%
+        #000 93%,
+        rgba(0, 0, 0, 0.45) 97%,
+        transparent 100%
       );
     -webkit-mask-composite: source-in;
     mask-composite: intersect;
+  }
+
+  /* Albedo — left fade + right fade + top fade + soft overall feather */
+  .hover-collage-tile--albedo {
+    -webkit-mask-image:
+      radial-gradient(
+        ellipse 78% 74% at 50% 46%,
+        #000 38%,
+        rgba(0, 0, 0, 0.78) 62%,
+        rgba(0, 0, 0, 0.35) 80%,
+        transparent 92%
+      ),
+      linear-gradient(
+        to left,
+        #000 0%,
+        #000 65%,
+        rgba(0, 0, 0, 0.5) 82%,
+        transparent 100%
+      ),
+      linear-gradient(
+        to right,
+        #000 0%,
+        #000 82%,
+        rgba(0, 0, 0, 0.5) 92%,
+        transparent 100%
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(0, 0, 0, 0.25) 12%,
+        rgba(0, 0, 0, 0.7) 28%,
+        #000 40%,
+        #000 78%,
+        transparent 96%
+      );
+    mask-image:
+      radial-gradient(
+        ellipse 78% 74% at 50% 46%,
+        #000 38%,
+        rgba(0, 0, 0, 0.78) 62%,
+        rgba(0, 0, 0, 0.35) 80%,
+        transparent 92%
+      ),
+      linear-gradient(
+        to left,
+        #000 0%,
+        #000 65%,
+        rgba(0, 0, 0, 0.5) 82%,
+        transparent 100%
+      ),
+      linear-gradient(
+        to right,
+        #000 0%,
+        #000 82%,
+        rgba(0, 0, 0, 0.5) 92%,
+        transparent 100%
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(0, 0, 0, 0.25) 12%,
+        rgba(0, 0, 0, 0.7) 28%,
+        #000 40%,
+        #000 78%,
+        transparent 96%
+      );
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+
+  /* Endmin / Yvone — light bottom dissolve (mask only, no dark wash) */
+  .hover-collage-tile--bottom {
+    -webkit-mask-image:
+      radial-gradient(
+        ellipse 74% 70% at 50% 44%,
+        #000 30%,
+        rgba(0, 0, 0, 0.8) 55%,
+        rgba(0, 0, 0, 0.4) 74%,
+        transparent 90%
+      ),
+      linear-gradient(
+        to top,
+        transparent 0%,
+        rgba(0, 0, 0, 0.45) 18%,
+        #000 36%,
+        #000 100%
+      );
+    mask-image:
+      radial-gradient(
+        ellipse 74% 70% at 50% 44%,
+        #000 30%,
+        rgba(0, 0, 0, 0.8) 55%,
+        rgba(0, 0, 0, 0.4) 74%,
+        transparent 90%
+      ),
+      linear-gradient(
+        to top,
+        transparent 0%,
+        rgba(0, 0, 0, 0.45) 18%,
+        #000 36%,
+        #000 100%
+      );
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+  }
+
+  /* Endmin — soft dissolve, slight top fade; no black overlay wash */
+  .hover-collage-tile--endmin {
+    -webkit-mask-image:
+      radial-gradient(
+        ellipse 74% 68% at 52% 46%,
+        #000 26%,
+        rgba(0, 0, 0, 0.85) 50%,
+        rgba(0, 0, 0, 0.4) 72%,
+        transparent 88%
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(0, 0, 0, 0.5) 5%,
+        #000 12%,
+        #000 100%
+      ),
+      linear-gradient(
+        to right,
+        transparent 0%,
+        rgba(0, 0, 0, 0.5) 12%,
+        #000 24%,
+        #000 100%
+      ),
+      linear-gradient(
+        to top,
+        transparent 0%,
+        rgba(0, 0, 0, 0.45) 14%,
+        #000 28%,
+        #000 100%
+      );
+    mask-image:
+      radial-gradient(
+        ellipse 74% 68% at 52% 46%,
+        #000 26%,
+        rgba(0, 0, 0, 0.85) 50%,
+        rgba(0, 0, 0, 0.4) 72%,
+        transparent 88%
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(0, 0, 0, 0.5) 5%,
+        #000 12%,
+        #000 100%
+      ),
+      linear-gradient(
+        to right,
+        transparent 0%,
+        rgba(0, 0, 0, 0.5) 12%,
+        #000 24%,
+        #000 100%
+      ),
+      linear-gradient(
+        to top,
+        transparent 0%,
+        rgba(0, 0, 0, 0.45) 14%,
+        #000 28%,
+        #000 100%
+      );
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+  }
+
+  /* Boot card "CONNECTED" glitch beat */
+  .connected-glitch {
+    position: relative;
+    display: inline-block;
+    animation: enter-glitch-shake 0.65s steps(2, end);
+  }
+
+  .connected-glitch::before,
+  .connected-glitch::after {
+    content: attr(data-glitch);
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+  }
+
+  .connected-glitch::before {
+    color: oklch(0.78 0.14 15);
+    mix-blend-mode: screen;
+    animation: enter-glitch-ghost-r 0.65s steps(2, end) forwards;
+  }
+
+  .connected-glitch::after {
+    color: oklch(0.82 0.1 280);
+    mix-blend-mode: screen;
+    animation: enter-glitch-ghost-c 0.65s steps(2, end) forwards;
   }
 
 
@@ -348,7 +591,6 @@
   .sakura-petal {
     position: absolute;
     left: auto;
-    right: -5%;
     border-radius: 150% 0;
     background: linear-gradient(
       135deg,
@@ -374,31 +616,31 @@
     transform: rotate(45deg);
   }
 
-  /* Upper-right → lower-left, with per-petal drift so the field fills the screen */
+  /* Full-screen diagonal wind: UR → LL with enough travel to cross the viewport */
   @keyframes sakura-blow {
     0% {
       transform: translate3d(0, 0, 0) rotate(var(--sakura-rotate, 0deg));
       opacity: 0;
     }
-    6% {
+    5% {
       opacity: var(--sakura-opacity, 0.55);
     }
-    45% {
+    50% {
       transform: translate3d(
-          calc(-52vw + var(--sakura-drift, 0px)),
-          calc(42vh + var(--sakura-drift, 0px) * 0.4),
+          calc(-60vw + var(--sakura-drift, 0px)),
+          calc(48vh + var(--sakura-drift, 0px) * 0.35),
           0
         )
-        rotate(calc(var(--sakura-rotate, 0deg) + 140deg));
+        rotate(calc(var(--sakura-rotate, 0deg) + 150deg));
       opacity: var(--sakura-opacity, 0.55);
     }
     100% {
       transform: translate3d(
-          calc(-120vw + var(--sakura-drift, 0px) * 1.4),
-          calc(110vh + var(--sakura-drift, 0px) * 0.6),
+          calc(-130vw + var(--sakura-drift, 0px) * 1.5),
+          calc(115vh + var(--sakura-drift, 0px) * 0.55),
           0
         )
-        rotate(calc(var(--sakura-rotate, 0deg) + 300deg));
+        rotate(calc(var(--sakura-rotate, 0deg) + 310deg));
       opacity: 0;
     }
   }

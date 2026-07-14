@@ -583,6 +583,84 @@
     animation: enter-glitch-ghost-c 0.65s steps(2, end) forwards;
   }
 
+  /* Games diary headline — entrance glitch after clearance */
+  .diary-title-glitch {
+    position: relative;
+    animation: enter-glitch-shake 0.75s steps(2, end);
+  }
+
+  .diary-title-glitch::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: -4% -2%;
+    z-index: 2;
+    background:
+      repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 2px,
+        oklch(1 0 0 / 0.14) 2px,
+        oklch(1 0 0 / 0.14) 3px
+      ),
+      linear-gradient(
+        90deg,
+        oklch(0.78 0.14 15 / 0.22),
+        transparent 42%,
+        oklch(0.8 0.1 280 / 0.2)
+      );
+    animation: enter-glitch-scan 0.75s linear forwards;
+  }
+
+  .diary-title-glitch::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    left: -4%;
+    right: -4%;
+    top: 28%;
+    z-index: 3;
+    height: 38%;
+    background: linear-gradient(
+      90deg,
+      oklch(0.78 0.14 15 / 0.5),
+      oklch(0.95 0.05 350 / 0.2),
+      oklch(0.8 0.1 280 / 0.45)
+    );
+    mix-blend-mode: screen;
+    animation: enter-glitch-slice 0.75s steps(2, end) forwards;
+  }
+
+  .diary-title-glitch .diary-title-glitch-word {
+    position: relative;
+    display: inline-block;
+    animation: enter-glitch-shake 0.75s steps(2, end);
+  }
+
+  .diary-title-glitch .diary-title-glitch-word::before,
+  .diary-title-glitch .diary-title-glitch-word::after {
+    content: attr(data-glitch);
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    background: inherit;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .diary-title-glitch .diary-title-glitch-word::before {
+    text-shadow: -2px 0 oklch(0.78 0.14 15);
+    animation: enter-glitch-ghost-r 0.75s steps(2, end) forwards;
+  }
+
+  .diary-title-glitch .diary-title-glitch-word::after {
+    text-shadow: 2px 0 oklch(0.82 0.1 280);
+    animation: enter-glitch-ghost-c 0.75s steps(2, end) forwards;
+  }
+
 
   .sakura-field {
     contain: layout style paint;

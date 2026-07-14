@@ -1,6 +1,7 @@
 "use client";
 
 import { ProtectedImage } from "@/components/landing/protected-image";
+import { skipStudioBootOnce } from "@/lib/studio-boot";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -33,6 +34,8 @@ export function BrandMark({
     setIsGlitching(false);
   };
 
+  const goesHome = href === "/" || href === "";
+
   return (
     <a
       href={href}
@@ -41,6 +44,9 @@ export function BrandMark({
         "inline-flex h-8 items-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
         className
       )}
+      onClick={() => {
+        if (goesHome) skipStudioBootOnce();
+      }}
       onMouseEnter={open}
       onMouseLeave={close}
       onFocus={open}

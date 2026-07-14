@@ -6,10 +6,20 @@ import { HudFrame } from "@/components/landing/hud-frame";
 import { ProtectedImage } from "@/components/landing/protected-image";
 import { Button } from "@/components/ui/button";
 import { gameEras } from "@/lib/games-diary";
+import { skipStudioBootOnce } from "@/lib/studio-boot";
+import { cn } from "@/lib/utils";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export function GamesDiary() {
+  const [titleGlitch, setTitleGlitch] = useState(true);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setTitleGlitch(false), 780);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
     <div className="bg-tactical relative min-h-full flex flex-col">
       <div
@@ -29,7 +39,7 @@ export function GamesDiary() {
               variant="outline"
               className="rounded-sm border-primary/25 bg-background/30"
               nativeButton={false}
-              render={<Link href="/" />}
+              render={<Link href="/" onClick={() => skipStudioBootOnce()} />}
             >
               <ArrowLeft className="size-3.5" />
               Studio
@@ -54,9 +64,22 @@ export function GamesDiary() {
                 </p>
               </div>
 
-              <h1 className="font-display max-w-3xl text-4xl leading-tight font-semibold tracking-tight md:text-5xl lg:text-6xl">
+              <h1
+                className={cn(
+                  "font-display max-w-3xl text-4xl leading-tight font-semibold tracking-tight md:text-5xl lg:text-6xl",
+                  titleGlitch && "diary-title-glitch"
+                )}
+              >
                 A logbook of worlds that{" "}
-                <span className="text-gradient-tactical">moved me</span>
+                <span
+                  data-glitch="moved me"
+                  className={cn(
+                    "text-gradient-tactical",
+                    titleGlitch && "diary-title-glitch-word"
+                  )}
+                >
+                  moved me
+                </span>
               </h1>
 
               <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
@@ -199,7 +222,7 @@ export function GamesDiary() {
               <Button
                 className="rounded-sm"
                 nativeButton={false}
-                render={<Link href="/" />}
+                render={<Link href="/" onClick={() => skipStudioBootOnce()} />}
               >
                 <ArrowLeft className="size-4" />
                 Back to Studio Zero

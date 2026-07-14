@@ -1,5 +1,6 @@
 "use client";
 
+import { AboutExperience } from "@/components/about/about-experience";
 import { BrandMark } from "@/components/landing/brand-mark";
 import {
   ChannelHoverArt,
@@ -8,6 +9,7 @@ import {
 import { FadeIn } from "@/components/landing/fade-in";
 import { HudFrame } from "@/components/landing/hud-frame";
 import { LoadingScreen } from "@/components/landing/loading-screen";
+import { OperatorDossier } from "@/components/landing/operator-dossier";
 import { ProtectedImage } from "@/components/landing/protected-image";
 import { ScrollProgress } from "@/components/landing/scroll-progress";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +28,7 @@ import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion"
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { consumeSkipStudioBoot } from "@/lib/studio-boot";
 
 type HeroSlide = {
   src: string;
@@ -100,40 +103,6 @@ const animeSlides: HeroSlide[] = [
 
 ];
 
-const dossierFields = [
-  { label: "Status", value: "Solo build · Online" },
-  { label: "Focus", value: "Games + Anime" },
-  { label: "Signal", value: "Fan-made archive" },
-  { label: "Built from", value: "Queues, seasons, late nights" },
-] as const;
-
-const dossierChannels = [
-  {
-    id: "games" as const,
-    code: "CH-01",
-    label: "Games",
-    detail: "Titles that shaped the taste",
-    icon: Gamepad2,
-    href: "/games",
-  },
-  {
-    id: "anime" as const,
-    code: "CH-02",
-    label: "Anime",
-    detail: "Stories that stay after the credits",
-    icon: Tv,
-    href: "#media",
-  },
-  {
-    id: "solo" as const,
-    code: "CH-03",
-    label: "Solo builds",
-    detail: "Experiments between both worlds",
-    icon: Sparkles,
-    href: "#newsletter",
-  },
-] as const;
-
 const loopSteps = [
   {
     phase: "01",
@@ -158,11 +127,11 @@ const loopSteps = [
 ];
 
 const navLinks = [
-  { href: "#features", label: "About" },
+  { href: "#features", label: "About", openAbout: true },
   { href: "#gameplay", label: "Flow" },
   { href: "/games", label: "Games" },
   { href: "#newsletter", label: "Connect" },
-];
+] as const;
 
 const footerArchive = [
   {
@@ -219,15 +188,16 @@ export default function Home() {
   const [isGlitching, setIsGlitching] = useState(false);
   const [glitchKey, setGlitchKey] = useState(0);
   const [hasMounted, setHasMounted] = useState(false);
-  const [bootDone, setBootDone] = useState(false);
+  const [bootState, setBootState] = useState<"pending" | "show" | "done">(
+    "pending"
+  );
+  const [showAbout, setShowAbout] = useState(false);
   const [showFooterGamesArt, setShowFooterGamesArt] = useState(false);
   const [footerGamesHoverCount, setFooterGamesHoverCount] = useState(0);
   const [clearanceOpen, setClearanceOpen] = useState(false);
   const [activeChannel, setActiveChannel] = useState<ChannelHoverMode | null>(
     null
   );
-  const [glitchingChannel, setGlitchingChannel] =
-    useState<ChannelHoverMode | null>(null);
   const skipNextGlitch = useRef(true);
 
   // Hover 1–2 → pair 0, hover 3–4 → pair 1, then loops
@@ -274,6 +244,23 @@ export default function Home() {
     setActiveSlide((prev) => (prev + 1) % slideCount);
   };
 
+  const bootDone = bootState === "done";
+
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem("sz-boot-done");
+    } catch {
+      /* ignore */
+    }
+    // Soft return home (About / Games → /) skips boot.
+    // Hard refresh resets the in-memory flag and always plays boot.
+    if (consumeSkipStudioBoot()) {
+      setBootState("done");
+      return;
+    }
+    setBootState("show");
+  }, []);
+
   useEffect(() => {
     if (!bootDone) return;
     setHasMounted(true);
@@ -309,8 +296,11 @@ export default function Home() {
 
   return (
     <div className="bg-tactical relative min-h-full flex flex-col">
-      {!bootDone ? (
-        <LoadingScreen onComplete={() => setBootDone(true)} />
+      {bootState === "show" ? (
+        <LoadingScreen onComplete={() => setBootState("done")} />
+      ) : null}
+      {showAbout ? (
+        <AboutExperience onClose={() => setShowAbout(false)} />
       ) : null}
       <ScrollProgress />
 
@@ -332,15 +322,26 @@ export default function Home() {
         <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
           <BrandMark href="#hero" priority />
           <div className="hidden items-center gap-8 md:flex">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="hud-label transition-colors hover:text-primary"
-              >
-                {link.label}
-              </a>
-            ))}
+            {navLinks.map((link) =>
+              "openAbout" in link && link.openAbout ? (
+                <button
+                  key={link.label}
+                  type="button"
+                  onClick={() => setShowAbout(true)}
+                  className="hud-label transition-colors hover:text-primary"
+                >
+                  {link.label}
+                </button>
+              ) : (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="hud-label transition-colors hover:text-primary"
+                >
+                  {link.label}
+                </a>
+              )
+            )}
           </div>
           <Button
             size="sm"
@@ -446,8 +447,7 @@ export default function Home() {
                   <Button
                     size="lg"
                     className="rounded-sm px-6"
-                    nativeButton={false}
-                    render={<a href="#features" />}
+                    onClick={() => setShowAbout(true)}
                   >
                     <Sparkles className="size-4" />
                     Explore Studio
@@ -617,125 +617,21 @@ export default function Home() {
                 Not a company profile a clearance file for the person behind
                 the archive.
               </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-5 rounded-sm border-primary/25 bg-background/30"
+                onClick={() => setShowAbout(true)}
+              >
+                Enter full dossier
+              </Button>
             </FadeIn>
 
             <FadeIn delay={0.08} className="mt-12">
-              <HudFrame className="bg-[oklch(0.2_0.035_350/0.72)] p-6 backdrop-blur-sm md:p-8">
-                <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-12">
-                  {/* Origin */}
-                  <div>
-                    <div className="mb-5 flex flex-wrap items-center gap-3">
-                      <p className="hud-label text-primary">SZ-DOSSIER</p>
-                      <span
-                        aria-hidden
-                        className="h-px flex-1 min-w-8 bg-gradient-to-r from-primary/35 to-transparent"
-                      />
-                      <p className="font-mono-hud text-[10px] tracking-[0.22em] text-primary/70">
-                        FILE // OPEN
-                      </p>
-                    </div>
-
-                    <p className="font-display text-2xl leading-snug font-medium tracking-tight text-foreground md:text-3xl">
-                      Studio Zero started in the gap between the next queue and
-                      the next episode.
-                    </p>
-                    <p className="mt-4 max-w-lg text-sm leading-relaxed text-muted-foreground md:text-base">
-                      A personal mini studio for the games I play, the anime I
-                      love, and the ideas that grow when both worlds collide
-                      built solo, updated as I go.
-                    </p>
-                  </div>
-
-                  {/* HUD fields */}
-                  <div className="border-t border-primary/15 pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-10">
-                    <p className="hud-label mb-4 text-accent">Clearance data</p>
-                    <ul className="space-y-3">
-                      {dossierFields.map((field) => (
-                        <li
-                          key={field.label}
-                          className="flex items-baseline justify-between gap-4 border-b border-primary/10 pb-2.5 last:border-0 last:pb-0"
-                        >
-                          <span className="hud-label shrink-0 text-muted-foreground">
-                            {field.label}
-                          </span>
-                          <span className="text-right text-sm text-foreground/90">
-                            {field.value}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                {/* Channel strip */}
-                <div className="mt-8 border-t border-primary/15 pt-6">
-                  <p className="hud-label mb-4 text-primary/80">
-                    Active channels
-                  </p>
-                  <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
-                    {dossierChannels.map((channel) => {
-                      const isActive = activeChannel === channel.id;
-                      const isGlitching = glitchingChannel === channel.id;
-
-                      const triggerChannel = () => {
-                        setActiveChannel(channel.id);
-                        setGlitchingChannel(null);
-                        requestAnimationFrame(() => {
-                          setGlitchingChannel(channel.id);
-                        });
-                      };
-
-                      const clearChannel = () => {
-                        setActiveChannel(null);
-                        setGlitchingChannel(null);
-                      };
-
-                      return (
-                        <Link
-                          key={channel.code}
-                          href={channel.href}
-                          data-channel={channel.id}
-                          className={cn(
-                            "channel-glitch-chip group flex items-start gap-3 rounded-sm border border-primary/15 bg-background/25 px-3.5 py-3 transition-colors hover:border-primary/35 hover:bg-primary/5",
-                            isActive && "is-glowing",
-                            isGlitching && "is-glitching"
-                          )}
-                          onMouseEnter={triggerChannel}
-                          onMouseLeave={clearChannel}
-                          onFocus={triggerChannel}
-                          onBlur={clearChannel}
-                          onAnimationEnd={(event) => {
-                            if (
-                              event.animationName.includes(
-                                "channel-glitch-chip-shake"
-                              )
-                            ) {
-                              setGlitchingChannel(null);
-                            }
-                          }}
-                        >
-                          <div className="channel-glitch-icon relative z-[1] mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-sm border border-primary/25 bg-primary/10 text-primary transition-all">
-                            <channel.icon className="size-3.5" />
-                          </div>
-                          <div className="relative z-[1] min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className="font-display text-sm font-medium text-foreground">
-                                {channel.label}
-                              </p>
-                              <span className="hud-label text-primary/55">
-                                {channel.code}
-                              </span>
-                            </div>
-                            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                              {channel.detail}
-                            </p>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              </HudFrame>
+              <OperatorDossier
+                activeChannel={activeChannel}
+                onActiveChannelChange={setActiveChannel}
+              />
             </FadeIn>
           </div>
         </section>
@@ -940,13 +836,23 @@ export default function Home() {
               <p className="hud-label text-primary">Explore</p>
               <ul className="mt-4 space-y-2.5">
                 {navLinks.map((link) => (
-                  <li key={link.href}>
-                    <a
-                      href={link.href}
-                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      {link.label}
-                    </a>
+                  <li key={link.label}>
+                    {"openAbout" in link && link.openAbout ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowAbout(true)}
+                        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {link.label}
+                      </button>
+                    ) : (
+                      <a
+                        href={link.href}
+                        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {link.label}
+                      </a>
+                    )}
                   </li>
                 ))}
                 <li>

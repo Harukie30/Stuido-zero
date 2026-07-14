@@ -3,6 +3,7 @@
 import { BrandMark } from "@/components/landing/brand-mark";
 import { FadeIn } from "@/components/landing/fade-in";
 import { HudFrame } from "@/components/landing/hud-frame";
+import { LoadingScreen } from "@/components/landing/loading-screen";
 import { ProtectedImage } from "@/components/landing/protected-image";
 import { ScrollProgress } from "@/components/landing/scroll-progress";
 import { Badge } from "@/components/ui/badge";
@@ -165,6 +166,7 @@ export default function Home() {
   const [isGlitching, setIsGlitching] = useState(false);
   const [glitchKey, setGlitchKey] = useState(0);
   const [hasMounted, setHasMounted] = useState(false);
+  const [bootDone, setBootDone] = useState(false);
   const [showFooterGamesArt, setShowFooterGamesArt] = useState(false);
   const [footerGamesHoverCount, setFooterGamesHoverCount] = useState(0);
   const skipNextGlitch = useRef(true);
@@ -214,8 +216,9 @@ export default function Home() {
   };
 
   useEffect(() => {
+    if (!bootDone) return;
     setHasMounted(true);
-  }, []);
+  }, [bootDone]);
 
   useEffect(() => {
     if (!hasMounted) return;
@@ -247,6 +250,9 @@ export default function Home() {
 
   return (
     <div className="bg-tactical relative min-h-full flex flex-col">
+      {!bootDone ? (
+        <LoadingScreen onComplete={() => setBootDone(true)} />
+      ) : null}
       <ScrollProgress />
 
       <div
@@ -339,7 +345,9 @@ export default function Home() {
             <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
               <motion.div
                 initial={{ opacity: 0, x: -24 }}
-                animate={{ opacity: 1, x: 0 }}
+                animate={
+                  bootDone ? { opacity: 1, x: 0 } : { opacity: 0, x: -24 }
+                }
                 transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                 className="relative z-10"
               >
@@ -411,10 +419,12 @@ export default function Home() {
 
               <motion.div
                 initial={{ opacity: 0, x: 24 }}
-                animate={{ opacity: 1, x: 0 }}
+                animate={
+                  bootDone ? { opacity: 1, x: 0 } : { opacity: 0, x: 24 }
+                }
                 transition={{
                   duration: 0.8,
-                  delay: 0.15,
+                  delay: bootDone ? 0.15 : 0,
                   ease: [0.22, 1, 0.36, 1],
                 }}
                 className="relative mx-auto w-full max-w-md"

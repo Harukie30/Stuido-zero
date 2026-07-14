@@ -1,7 +1,9 @@
 "use client";
 
+import { HoverCollage } from "@/components/landing/hover-collage";
 import { HudFrame } from "@/components/landing/hud-frame";
 import { ProtectedImage } from "@/components/landing/protected-image";
+import { SakuraPetals } from "@/components/landing/sakura-petals";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -13,30 +15,6 @@ const BOOT_LINES = [
   { code: "SYS-02", label: "Syncing game archive" },
   { code: "SYS-03", label: "Linking anime feed" },
   { code: "SYS-04", label: "Connecting worlds" },
-] as const;
-
-/** Same pairs as footer — swaps every other hover */
-const HOVER_ART_PAIRS = [
-  {
-    left: {
-      src: "/footer-anime/anime-4.png",
-      className: "object-cover object-[72%_6%] scale-[1.35]",
-    },
-    right: {
-      src: "/footer-anime/anime-3.png",
-      className: "object-cover object-[68%_8%] scale-[1.35]",
-    },
-  },
-  {
-    left: {
-      src: "/footer-anime/anime-5.png",
-      className: "object-cover object-[62%_8%] scale-[1.25] translate-y-[10%]",
-    },
-    right: {
-      src: "/footer-anime/anime-6.png",
-      className: "object-cover object-[50%_18%] scale-[1.3]",
-    },
-  },
 ] as const;
 
 const MIN_DURATION_MS = 2400;
@@ -55,15 +33,8 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
   const [progress, setProgress] = useState(0);
   const [lineIndex, setLineIndex] = useState(0);
   const [showArt, setShowArt] = useState(false);
-  const [hoverCount, setHoverCount] = useState(0);
   const [isGlitching, setIsGlitching] = useState(false);
   const didComplete = useRef(false);
-
-  const artPairIndex =
-    hoverCount === 0
-      ? 0
-      : Math.floor((hoverCount - 1) / 2) % HOVER_ART_PAIRS.length;
-  const artPair = HOVER_ART_PAIRS[artPairIndex] ?? HOVER_ART_PAIRS[0];
 
   useEffect(() => {
     if (reduceMotion) {
@@ -125,7 +96,6 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
   };
 
   const revealArt = () => {
-    setHoverCount((count) => count + 1);
     setShowArt(true);
     triggerGlitch();
   };
@@ -186,6 +156,8 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
             className="pointer-events-none absolute bottom-0 left-0 h-[320px] w-[320px] rounded-full bg-accent/10 blur-3xl"
           />
 
+          {!reduceMotion ? <SakuraPetals active={showArt} /> : null}
+
           {!reduceMotion && !expanded ? (
             <motion.div
               aria-hidden
@@ -200,67 +172,10 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
             />
           ) : null}
 
-          {/* Hover reveal art — left */}
-          <div
-            aria-hidden
-            className={cn(
-              "pointer-events-none absolute inset-y-0 left-0 z-[1] w-[min(48%,380px)] overflow-hidden transition-all duration-500 ease-out md:w-[min(44%,460px)]",
-              showArt
-                ? "translate-x-0 opacity-100"
-                : "-translate-x-10 opacity-0"
-            )}
-          >
-            <div className="absolute inset-x-0 bottom-0 top-[8%]">
-              <ProtectedImage
-                key={artPair.left.src}
-                src={artPair.left.src}
-                alt=""
-                fill
-                sizes="460px"
-                className={cn(
-                  artPair.left.className,
-                  "mix-blend-lighten opacity-75"
-                )}
-              />
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent from-10% via-[oklch(0.28_0.03_350/0.2)] via-45% to-[oklch(0.28_0.03_350/0.95)]" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.22_0.04_350/0.55)] via-transparent to-[oklch(0.28_0.03_350/0.25)]" />
-          </div>
+          {/* Left hover art — reserved for a later design pass */}
 
-          {/* Hover reveal art — right */}
-          <div
-            aria-hidden
-            className={cn(
-              "pointer-events-none absolute inset-y-0 right-0 z-[1] w-[min(48%,380px)] overflow-hidden transition-all duration-500 ease-out md:w-[min(44%,460px)]",
-              showArt
-                ? "translate-x-0 opacity-100"
-                : "translate-x-10 opacity-0"
-            )}
-          >
-            <div className="absolute inset-x-0 bottom-0 top-[8%]">
-              <ProtectedImage
-                key={artPair.right.src}
-                src={artPair.right.src}
-                alt=""
-                fill
-                sizes="460px"
-                className={cn(
-                  artPair.right.className,
-                  "mix-blend-lighten opacity-75"
-                )}
-              />
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-l from-transparent from-10% via-[oklch(0.28_0.03_350/0.2)] via-45% to-[oklch(0.28_0.03_350/0.95)]" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.22_0.04_350/0.55)] via-transparent to-[oklch(0.28_0.03_350/0.25)]" />
-          </div>
-
-          <div
-            aria-hidden
-            className={cn(
-              "pointer-events-none absolute inset-0 z-[2] bg-[radial-gradient(ellipse_at_center,oklch(0.26_0.03_350/0.7)_0%,oklch(0.26_0.03_350/0.3)_42%,transparent_72%)] transition-opacity duration-500",
-              showArt ? "opacity-100" : "opacity-0"
-            )}
-          />
+          {/* Right hover — full-side games + anime collage */}
+          <HoverCollage active={showArt} />
 
           <motion.div
             layout

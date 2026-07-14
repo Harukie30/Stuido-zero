@@ -210,6 +210,206 @@
     );
   }
 
+  /* Soft feather on the inward edge of side hover art */
+  .hover-art-fade-left {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      #000 0%,
+      #000 42%,
+      rgba(0, 0, 0, 0.55) 68%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      #000 0%,
+      #000 42%,
+      rgba(0, 0, 0, 0.55) 68%,
+      transparent 100%
+    );
+  }
+
+  .hover-art-fade-right {
+    -webkit-mask-image: linear-gradient(
+      to left,
+      #000 0%,
+      #000 42%,
+      rgba(0, 0, 0, 0.55) 68%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to left,
+      #000 0%,
+      #000 42%,
+      rgba(0, 0, 0, 0.55) 68%,
+      transparent 100%
+    );
+  }
+
+  /* Soft cell dissolves for the right-side quad formation */
+  .hover-quad-tl {
+    -webkit-mask-image:
+      linear-gradient(to right, #000 0%, #000 55%, transparent 92%),
+      linear-gradient(to bottom, #000 0%, #000 50%, transparent 92%);
+    mask-image:
+      linear-gradient(to right, #000 0%, #000 55%, transparent 92%),
+      linear-gradient(to bottom, #000 0%, #000 50%, transparent 92%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+
+  .hover-quad-tr {
+    -webkit-mask-image:
+      linear-gradient(to left, #000 0%, #000 55%, transparent 92%),
+      linear-gradient(to bottom, #000 0%, #000 50%, transparent 92%);
+    mask-image:
+      linear-gradient(to left, #000 0%, #000 55%, transparent 92%),
+      linear-gradient(to bottom, #000 0%, #000 50%, transparent 92%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+
+  .hover-quad-bl {
+    -webkit-mask-image:
+      linear-gradient(to right, #000 0%, #000 55%, transparent 92%),
+      linear-gradient(to top, #000 0%, #000 50%, transparent 92%);
+    mask-image:
+      linear-gradient(to right, #000 0%, #000 55%, transparent 92%),
+      linear-gradient(to top, #000 0%, #000 50%, transparent 92%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+
+  .hover-quad-br {
+    -webkit-mask-image:
+      linear-gradient(to left, #000 0%, #000 55%, transparent 92%),
+      linear-gradient(to top, #000 0%, #000 50%, transparent 92%);
+    mask-image:
+      linear-gradient(to left, #000 0%, #000 55%, transparent 92%),
+      linear-gradient(to top, #000 0%, #000 50%, transparent 92%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+
+  /* Soft feathered collage tiles (no hard frame edges) */
+  .hover-collage-tile {
+    -webkit-mask-image: radial-gradient(
+      ellipse 72% 68% at 50% 45%,
+      #000 28%,
+      rgba(0, 0, 0, 0.75) 52%,
+      transparent 78%
+    );
+    mask-image: radial-gradient(
+      ellipse 72% 68% at 50% 45%,
+      #000 28%,
+      rgba(0, 0, 0, 0.75) 52%,
+      transparent 78%
+    );
+  }
+
+  /* Rosaria only — extra dissolve on the right edge toward Albedo */
+  .hover-collage-tile--rosaria {
+    -webkit-mask-image:
+      radial-gradient(
+        ellipse 72% 68% at 50% 45%,
+        #000 28%,
+        rgba(0, 0, 0, 0.75) 52%,
+        transparent 78%
+      ),
+      linear-gradient(
+        to right,
+        #000 0%,
+        #000 48%,
+        rgba(0, 0, 0, 0.55) 68%,
+        transparent 92%
+      );
+    mask-image:
+      radial-gradient(
+        ellipse 72% 68% at 50% 45%,
+        #000 28%,
+        rgba(0, 0, 0, 0.75) 52%,
+        transparent 78%
+      ),
+      linear-gradient(
+        to right,
+        #000 0%,
+        #000 48%,
+        rgba(0, 0, 0, 0.55) 68%,
+        transparent 92%
+      );
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+
+
+  .sakura-field {
+    contain: layout style paint;
+  }
+
+  .sakura-petal {
+    position: absolute;
+    left: auto;
+    right: -5%;
+    border-radius: 150% 0;
+    background: linear-gradient(
+      135deg,
+      oklch(0.92 0.05 15 / 0.95),
+      oklch(0.8 0.1 350 / 0.85) 55%,
+      oklch(0.78 0.11 15 / 0.75)
+    );
+    box-shadow: 0 0 8px oklch(0.85 0.06 15 / 0.25);
+    opacity: 0;
+    transform: rotate(var(--sakura-rotate, 0deg));
+    animation-name: sakura-blow;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    will-change: transform, opacity;
+  }
+
+  .sakura-petal::after {
+    content: "";
+    position: absolute;
+    inset: 18% 35% 18% 35%;
+    border-radius: inherit;
+    background: oklch(0.95 0.03 15 / 0.45);
+    transform: rotate(45deg);
+  }
+
+  /* Upper-right → lower-left, with per-petal drift so the field fills the screen */
+  @keyframes sakura-blow {
+    0% {
+      transform: translate3d(0, 0, 0) rotate(var(--sakura-rotate, 0deg));
+      opacity: 0;
+    }
+    6% {
+      opacity: var(--sakura-opacity, 0.55);
+    }
+    45% {
+      transform: translate3d(
+          calc(-52vw + var(--sakura-drift, 0px)),
+          calc(42vh + var(--sakura-drift, 0px) * 0.4),
+          0
+        )
+        rotate(calc(var(--sakura-rotate, 0deg) + 140deg));
+      opacity: var(--sakura-opacity, 0.55);
+    }
+    100% {
+      transform: translate3d(
+          calc(-120vw + var(--sakura-drift, 0px) * 1.4),
+          calc(110vh + var(--sakura-drift, 0px) * 0.6),
+          0
+        )
+        rotate(calc(var(--sakura-rotate, 0deg) + 300deg));
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sakura-petal {
+      animation: none;
+      display: none;
+    }
+  }
+
   .glitch-overlay {
     pointer-events: none;
     position: absolute;

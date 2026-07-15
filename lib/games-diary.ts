@@ -30,7 +30,7 @@ export const gameEras: GameEra[] = [
     title: "Kid signal",
     period: "Early years",
     summary:
-      "Before ranks and battle passes — just the spark. Controllers after school, borrowed cartridges, staying up past bedtime because one more run felt necessary.",
+      "Before ranks and battle passes just the spark. Controllers after school, borrowed cartridges, staying up past bedtime because one more run felt necessary.",
     entries: [
       {
         slug: "first-spark",
@@ -39,7 +39,7 @@ export const gameEras: GameEra[] = [
         logo: "/games-img/studio-logo.png",
         background: "/games-img/studio-full.png",
         feeling: "Games were not a hobby yet. They were weather.",
-        note: "I didn’t have a library then — just moments. Loud living rooms, shared screens, and that feeling that a world could open from nowhere. Studio Zero starts here, even without a proper logo to hang on it.",
+        note: "I didn’t have a library then just moments. Loud living rooms, shared screens, and that feeling that a world could open from nowhere. Studio Zero starts here, even without a proper logo to hang on it.",
       },
     ],
   },
@@ -49,7 +49,7 @@ export const gameEras: GameEra[] = [
     title: "Growing signal",
     period: "Teens → early online years",
     summary:
-      "Queues, lobbies, and late-night friends. Games stopped being just play — they became rooms I kept returning to while figuring out who I was.",
+      "Queues, lobbies, and late-night friends. Games stopped being just play, they became rooms I kept returning to while figuring out who I was.",
     entries: [
       {
         slug: "osu",
@@ -58,7 +58,7 @@ export const gameEras: GameEra[] = [
         logo: "/games-img/Osu Logo.png",
         background: "/games-img/Osu back.jpg",
         feeling: "Click-click calm when everything else felt loud.",
-        note: "Maps, combos, retries. A private practice room where progress was honest — miss = miss, no excuses. It taught me focus before I had language for it.",
+        note: "Maps, combos, retries. A private practice room where progress was honest miss = miss, no excuses. It taught me focus before I had language for it.",
       },
       {
         slug: "league-of-legends",

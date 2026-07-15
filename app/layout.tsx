@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     "Studio Zero is a personal mini studio for the games I play, the anime I love, and the ideas that grow between them.",
   openGraph: {
     title: "Studio Zero",
-    description: "Where Anime and Games Connect — a solo studio built from hobbies.",
+    description: "Where Anime and Games Connect a solo studio built from hobbies.",
     type: "website",
   },
 };
@@ -39,13 +39,15 @@ export default function RootLayout({
     <html
       lang="en"
       className={cn(
-        "h-full antialiased dark",
+        "h-full overflow-x-hidden antialiased dark",
         dmSans.variable,
         sourceSerif.variable,
         ibmPlexMono.variable
       )}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="flex min-h-full flex-col overflow-x-hidden pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)]">
+        {children}
+      </body>
     </html>
   );
 }

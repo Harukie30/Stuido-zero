@@ -7,7 +7,7 @@ import { dossierChannels, dossierFields } from "@/lib/dossier";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState, type AnimationEvent } from "react";
 
 type OperatorDossierProps = {
   className?: string;
@@ -15,6 +15,11 @@ type OperatorDossierProps = {
   onActiveChannelChange?: (mode: ChannelHoverMode | null) => void;
 };
 
+/**
+ * Desktop: hover previews channel art.
+ * Touch: first tap pins the art; second tap on the same chip follows the link
+ * (Games still opens clearance on any tap after pinning/previewing).
+ */
 export function OperatorDossier({
   className,
   activeChannel: controlledActive,
@@ -26,6 +31,15 @@ export function OperatorDossier({
   const [glitchingChannel, setGlitchingChannel] =
     useState<ChannelHoverMode | null>(null);
   const [showGamesLoading, setShowGamesLoading] = useState(false);
+  const [canHover, setCanHover] = useState(true);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const sync = () => setCanHover(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const activeChannel =
     controlledActive !== undefined ? controlledActive : uncontrolledActive;
@@ -33,6 +47,21 @@ export function OperatorDossier({
   const setActiveChannel = (mode: ChannelHoverMode | null) => {
     onActiveChannelChange?.(mode);
     if (controlledActive === undefined) setUncontrolledActive(mode);
+  };
+
+  const pulseGlitch = (id: ChannelHoverMode) => {
+    setGlitchingChannel(null);
+    requestAnimationFrame(() => setGlitchingChannel(id));
+  };
+
+  const pinChannel = (id: ChannelHoverMode) => {
+    setActiveChannel(id);
+    pulseGlitch(id);
+  };
+
+  const clearChannel = () => {
+    setActiveChannel(null);
+    setGlitchingChannel(null);
   };
 
   return (
@@ -43,13 +72,13 @@ export function OperatorDossier({
 
       <HudFrame
         className={cn(
-          "relative z-10 bg-[oklch(0.2_0.035_350/0.72)] p-6 backdrop-blur-sm md:p-8",
+          "relative z-10 bg-[oklch(0.2_0.035_350/0.72)] p-4 backdrop-blur-sm sm:p-6 md:p-8",
           className
         )}
       >
-        <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-12">
+        <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:gap-12">
           <div>
-            <div className="mb-5 flex flex-wrap items-center gap-3">
+            <div className="mb-4 flex flex-wrap items-center gap-2 sm:mb-5 sm:gap-3">
               <p className="hud-label text-primary">SZ-DOSSIER</p>
               <span
                 aria-hidden
@@ -60,15 +89,20 @@ export function OperatorDossier({
               </p>
             </div>
 
-            <p className="font-display text-2xl leading-snug font-medium tracking-tight text-foreground md:text-3xl">
+            <p className="font-display text-xl leading-snug font-medium tracking-tight text-foreground sm:text-2xl md:text-3xl">
               Studio Zero started in the gap between the next queue and the next
               episode.
             </p>
-            <p className="mt-4 max-w-lg text-sm leading-relaxed text-muted-foreground md:text-base">
+            <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground sm:mt-4 md:text-base">
               A personal mini studio for the games I play, the anime I love, and
               the ideas that grow when both worlds collide built solo, updated
               as I go.
             </p>
+            {!canHover ? (
+              <p className="mt-3 font-mono-hud text-[9px] tracking-[0.18em] text-primary/55">
+                TAP A CHANNEL TO PREVIEW · TAP AGAIN TO ENTER
+              </p>
+            ) : null}
           </div>
 
           <div className="border-t border-primary/15 pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-10">
@@ -77,7 +111,7 @@ export function OperatorDossier({
               {dossierFields.map((field) => (
                 <li
                   key={field.label}
-                  className="flex items-baseline justify-between gap-4 border-b border-primary/10 pb-2.5 last:border-0 last:pb-0"
+                  className="flex items-baseline justify-between gap-3 border-b border-primary/10 pb-2.5 last:border-0 last:pb-0 sm:gap-4"
                 >
                   <span className="hud-label shrink-0 text-muted-foreground">
                     {field.label}
@@ -91,40 +125,29 @@ export function OperatorDossier({
           </div>
         </div>
 
-        <div className="mt-8 border-t border-primary/15 pt-6">
-          <p className="hud-label mb-4 text-primary/80">Active channels</p>
-          <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
+        <div className="mt-7 border-t border-primary/15 pt-5 sm:mt-8 sm:pt-6">
+          <p className="hud-label mb-3 text-primary/80 sm:mb-4">
+            Active channels
+          </p>
+          <div className="grid gap-2.5 sm:grid-cols-3 sm:gap-4">
             {dossierChannels.map((channel) => {
               const isActive = activeChannel === channel.id;
               const isGlitching = glitchingChannel === channel.id;
               const isGames = channel.id === "games";
 
-              const triggerChannel = () => {
-                setActiveChannel(channel.id);
-                setGlitchingChannel(null);
-                requestAnimationFrame(() => {
-                  setGlitchingChannel(channel.id);
-                });
-              };
-
-              const clearChannel = () => {
-                setActiveChannel(null);
-                setGlitchingChannel(null);
-              };
-
               const className = cn(
-                "channel-glitch-chip group flex items-start gap-3 rounded-sm border border-primary/15 bg-background/25 px-3.5 py-3 transition-colors hover:border-primary/35 hover:bg-primary/5",
+                "channel-glitch-chip group flex min-h-14 items-start gap-3 rounded-sm border border-primary/15 bg-background/25 px-3.5 py-3.5 transition-colors hover:border-primary/35 hover:bg-primary/5 active:scale-[0.99] sm:min-h-0 sm:py-3",
                 isActive && "is-glowing",
                 isGlitching && "is-glitching"
               );
 
               const content = (
                 <>
-                  <div className="channel-glitch-icon relative z-[1] mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-sm border border-primary/25 bg-primary/10 text-primary transition-all">
+                  <div className="channel-glitch-icon relative z-[1] mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-sm border border-primary/25 bg-primary/10 text-primary transition-all sm:size-8">
                     <channel.icon className="size-3.5" />
                   </div>
                   <div className="relative z-[1] min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <p className="font-display text-sm font-medium text-foreground">
                         {channel.label}
                       </p>
@@ -139,23 +162,12 @@ export function OperatorDossier({
                 </>
               );
 
-              const sharedHandlers = {
-                onMouseEnter: triggerChannel,
-                onMouseLeave: clearChannel,
-                onFocus: triggerChannel,
-                onBlur: clearChannel,
-                onAnimationEnd: (
-                  event: React.AnimationEvent<HTMLElement>
-                ) => {
-                  if (
-                    event.animationName.includes("channel-glitch-chip-shake")
-                  ) {
-                    setGlitchingChannel(null);
-                  }
-                },
+              const onAnimationEnd = (event: AnimationEvent<HTMLElement>) => {
+                if (event.animationName.includes("channel-glitch-chip-shake")) {
+                  setGlitchingChannel(null);
+                }
               };
 
-              // Games — run clearance loader, then enter diary
               if (isGames) {
                 return (
                   <button
@@ -163,8 +175,19 @@ export function OperatorDossier({
                     type="button"
                     data-channel={channel.id}
                     className={cn(className, "w-full text-left")}
-                    {...sharedHandlers}
-                    onClick={() => setShowGamesLoading(true)}
+                    onMouseEnter={canHover ? () => pinChannel(channel.id) : undefined}
+                    onMouseLeave={canHover ? clearChannel : undefined}
+                    onFocus={canHover ? () => pinChannel(channel.id) : undefined}
+                    onBlur={canHover ? clearChannel : undefined}
+                    onAnimationEnd={onAnimationEnd}
+                    onClick={() => {
+                      if (!canHover && activeChannel !== channel.id) {
+                        pinChannel(channel.id);
+                        return;
+                      }
+                      pinChannel(channel.id);
+                      setShowGamesLoading(true);
+                    }}
                   >
                     {content}
                   </button>
@@ -177,7 +200,17 @@ export function OperatorDossier({
                   href={channel.href}
                   data-channel={channel.id}
                   className={className}
-                  {...sharedHandlers}
+                  onMouseEnter={canHover ? () => pinChannel(channel.id) : undefined}
+                  onMouseLeave={canHover ? clearChannel : undefined}
+                  onFocus={canHover ? () => pinChannel(channel.id) : undefined}
+                  onBlur={canHover ? clearChannel : undefined}
+                  onAnimationEnd={onAnimationEnd}
+                  onClick={(event) => {
+                    if (!canHover && activeChannel !== channel.id) {
+                      event.preventDefault();
+                      pinChannel(channel.id);
+                    }
+                  }}
                 >
                   {content}
                 </Link>

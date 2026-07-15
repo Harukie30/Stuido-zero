@@ -46,15 +46,20 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
 
   useEffect(() => {
     if (reduceMotion) {
-      setProgress(100);
-      setShowConnected(true);
-      setShowSystemOnline(true);
+      const bootTimer = window.setTimeout(() => {
+        setProgress(100);
+        setShowConnected(true);
+        setShowSystemOnline(true);
+      }, 0);
       const onlineTimer = window.setTimeout(() => {
         setShowSystemOnline(false);
         setExpanded(true);
         setShowEnter(true);
       }, 200);
-      return () => window.clearTimeout(onlineTimer);
+      return () => {
+        window.clearTimeout(bootTimer);
+        window.clearTimeout(onlineTimer);
+      };
     }
 
     const start = performance.now();
@@ -408,8 +413,8 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
                 className={cn(
                   "relative mx-auto",
                   expanded
-                    ? "mb-6 h-14 w-[min(100%,16rem)]"
-                    : "mb-4 h-10 w-[8.5rem]"
+                    ? "mb-6 h-[4.5rem] w-[min(100%,20rem)] sm:h-20 sm:w-[22rem]"
+                    : "mb-4 h-12 w-[10.5rem]"
                 )}
                 transition={{ layout: { duration: EXPAND_MS / 1000, ease } }}
               >
@@ -417,7 +422,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
                   src="/games-img/studio-full.png"
                   alt="Studio Zero"
                   fill
-                  sizes="256px"
+                  sizes="352px"
                   priority
                   className="object-contain object-center"
                 />

@@ -28,7 +28,10 @@ export function GamesLoadingScreen({ onComplete }: GamesLoadingScreenProps) {
   const [unlocked, setUnlocked] = useState(false);
   const didComplete = useRef(false);
   const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     const start = performance.now();

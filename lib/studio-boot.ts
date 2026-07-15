@@ -1,15 +1,14 @@
 /**
- * In-memory only (resets on hard refresh).
- * Soft navigations back to `/` set this so the studio boot does not replay.
+ * In-memory only — resets on hard refresh / full document load.
+ * Soft client navigations (About, Games, back button) keep this module alive
+ * so the studio boot screen does not replay.
  */
-let skipNextStudioBoot = false;
+let studioBootCompleted = false;
 
-export function skipStudioBootOnce() {
-  skipNextStudioBoot = true;
+export function isStudioBootCompleted() {
+  return studioBootCompleted;
 }
 
-export function consumeSkipStudioBoot() {
-  if (!skipNextStudioBoot) return false;
-  skipNextStudioBoot = false;
-  return true;
+export function completeStudioBoot() {
+  studioBootCompleted = true;
 }

@@ -1,45 +1,66 @@
 "use client";
 
+import { GamesExitLoadingScreen } from "@/components/games/games-exit-loading-screen";
 import { BrandMark } from "@/components/landing/brand-mark";
 import { FadeIn } from "@/components/landing/fade-in";
 import { HudFrame } from "@/components/landing/hud-frame";
 import { ProtectedImage } from "@/components/landing/protected-image";
 import { Button } from "@/components/ui/button";
 import { gameEras } from "@/lib/games-diary";
-import { skipStudioBootOnce } from "@/lib/studio-boot";
+import { completeStudioBoot } from "@/lib/studio-boot";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, BookOpen } from "lucide-react";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 export function GamesDiary() {
+  const router = useRouter();
   const [titleGlitch, setTitleGlitch] = useState(true);
+  const [closing, setClosing] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setTitleGlitch(false), 780);
     return () => window.clearTimeout(timer);
   }, []);
 
+  const beginClose = useCallback(() => {
+    setClosing(true);
+  }, []);
+
+  const finishClose = useCallback(() => {
+    completeStudioBoot();
+    router.replace("/");
+  }, [router]);
+
   return (
-    <div className="bg-tactical relative min-h-full flex flex-col">
+    <div className="bg-tactical relative flex min-h-full flex-col">
+      {closing ? <GamesExitLoadingScreen onComplete={finishClose} /> : null}
+
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,oklch(0.95_0.03_350/0.08),transparent_55%)]"
       />
 
       <header className="relative z-20 border-b border-primary/15 bg-[oklch(0.19_0.042_350/0.72)] backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-6">
-          <BrandMark href="/" />
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:gap-4 sm:px-6">
+          <BrandMark
+            href="/"
+            onClick={(event) => {
+              event.preventDefault();
+              beginClose();
+            }}
+          />
           <nav className="flex items-center gap-4">
             <p className="hud-label hidden text-primary sm:block">
               SZ-ARCHIVE // GAMES
             </p>
             <Button
+              type="button"
               size="sm"
               variant="outline"
               className="rounded-sm border-primary/25 bg-background/30"
-              nativeButton={false}
-              render={<Link href="/" onClick={() => skipStudioBootOnce()} />}
+              onClick={beginClose}
+              disabled={closing}
             >
               <ArrowLeft className="size-3.5" />
               Studio
@@ -49,11 +70,10 @@ export function GamesDiary() {
       </header>
 
       <main className="relative z-10 flex-1">
-        {/* Intro transmission */}
-        <section className="px-6 pt-16 pb-12 md:pt-24 md:pb-16">
+        <section className="px-4 pt-12 pb-10 sm:px-6 sm:pt-16 sm:pb-12 md:pt-24 md:pb-16">
           <div className="mx-auto max-w-6xl">
             <FadeIn>
-              <div className="mb-6 flex flex-wrap items-center gap-3">
+              <div className="mb-5 flex flex-wrap items-center gap-2 sm:mb-6 sm:gap-3">
                 <p className="hud-label text-primary">Games diary</p>
                 <span
                   aria-hidden
@@ -66,7 +86,7 @@ export function GamesDiary() {
 
               <h1
                 className={cn(
-                  "font-display max-w-3xl text-4xl leading-tight font-semibold tracking-tight md:text-5xl lg:text-6xl",
+                  "font-display max-w-3xl text-[1.85rem] leading-tight font-semibold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl",
                   titleGlitch && "diary-title-glitch"
                 )}
               >
@@ -83,7 +103,7 @@ export function GamesDiary() {
               </h1>
 
               <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
-                Not reviews. Not rankings. Just the eras — kid spark, growing
+                Not reviews. Not rankings. Just the eras kid spark, growing
                 up in lobbies, and the quiet years when the pandemic made games
                 feel like hallways between days.
               </p>
@@ -112,14 +132,13 @@ export function GamesDiary() {
               </div>
             </FadeIn>
 
-            {/* Era jump chips */}
-            <FadeIn delay={0.08} className="mt-10">
-              <div className="flex flex-wrap gap-2">
+            <FadeIn delay={0.08} className="mt-8 sm:mt-10">
+              <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden">
                 {gameEras.map((era) => (
                   <a
                     key={era.id}
                     href={`#${era.id}`}
-                    className="inline-flex items-center gap-2 rounded-sm border border-primary/20 bg-background/30 px-3 py-1.5 transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+                    className="inline-flex shrink-0 items-center gap-2 rounded-sm border border-primary/20 bg-background/30 px-3 py-2 transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary active:bg-primary/15"
                   >
                     <span className="hud-label text-primary/70">{era.code}</span>
                     <span className="text-xs text-foreground/85">{era.title}</span>
@@ -130,17 +149,12 @@ export function GamesDiary() {
           </div>
         </section>
 
-        {/* Eras */}
-        <div className="mx-auto max-w-6xl space-y-20 px-6 pb-24 md:pb-32">
+        <div className="mx-auto max-w-6xl space-y-12 px-4 pb-20 sm:space-y-16 sm:px-6 md:space-y-20 md:pb-32">
           {gameEras.map((era, eraIndex) => (
-            <section
-              key={era.id}
-              id={era.id}
-              className="scroll-mt-20"
-            >
+            <section key={era.id} id={era.id} className="scroll-mt-20">
               <FadeIn>
-                <HudFrame className="overflow-hidden bg-[oklch(0.2_0.035_350/0.5)] p-6 backdrop-blur-sm md:p-8">
-                  <div className="flex flex-col gap-4 border-b border-primary/15 pb-6 sm:flex-row sm:items-end sm:justify-between">
+                <HudFrame className="overflow-hidden bg-[oklch(0.2_0.035_350/0.5)] p-4 backdrop-blur-sm sm:p-6 md:p-8">
+                  <div className="flex flex-col gap-4 border-b border-primary/15 pb-5 sm:flex-row sm:items-end sm:justify-between sm:pb-6">
                     <div>
                       <div className="mb-3 flex flex-wrap items-center gap-3">
                         <p className="hud-label text-primary">{era.code}</p>
@@ -165,11 +179,11 @@ export function GamesDiary() {
                     </p>
                   </div>
 
-                  <div className="mt-8 space-y-6">
+                  <div className="mt-6 space-y-4 sm:mt-8 sm:space-y-6">
                     {era.entries.map((entry) => (
                       <article
                         key={entry.slug}
-                        className="group grid gap-5 rounded-sm border border-primary/12 bg-background/20 p-4 transition-colors hover:border-primary/30 hover:bg-primary/[0.04] sm:grid-cols-[7.5rem_1fr] sm:gap-6 sm:p-5"
+                        className="group grid gap-4 rounded-sm border border-primary/12 bg-background/20 p-3.5 transition-colors hover:border-primary/30 hover:bg-primary/[0.04] active:bg-primary/[0.06] sm:grid-cols-[7.5rem_1fr] sm:gap-6 sm:p-5"
                       >
                         <div className="relative mx-auto aspect-square w-24 overflow-hidden sm:mx-0 sm:w-full">
                           <ProtectedImage
@@ -220,9 +234,10 @@ export function GamesDiary() {
                 </div>
               </div>
               <Button
+                type="button"
                 className="rounded-sm"
-                nativeButton={false}
-                render={<Link href="/" onClick={() => skipStudioBootOnce()} />}
+                onClick={beginClose}
+                disabled={closing}
               >
                 <ArrowLeft className="size-4" />
                 Back to Studio Zero

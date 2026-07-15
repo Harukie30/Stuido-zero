@@ -1,6 +1,5 @@
 "use client";
 
-import { AboutExperience } from "@/components/about/about-experience";
 import { BrandMark } from "@/components/landing/brand-mark";
 import {
   ChannelHoverArt,
@@ -21,14 +20,19 @@ import {
   Gamepad2,
   Heart,
   Mail,
+  Menu,
   Sparkles,
   Tv,
+  X,
 } from "lucide-react";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { consumeSkipStudioBoot } from "@/lib/studio-boot";
+import {
+  completeStudioBoot,
+  isStudioBootCompleted,
+} from "@/lib/studio-boot";
 
 type HeroSlide = {
   src: string;
@@ -127,7 +131,7 @@ const loopSteps = [
 ];
 
 const navLinks = [
-  { href: "#features", label: "About", openAbout: true },
+  { href: "#features", label: "About" },
   { href: "#gameplay", label: "Flow" },
   { href: "/games", label: "Games" },
   { href: "#newsletter", label: "Connect" },
@@ -144,26 +148,30 @@ const footerArchive = [
   { href: "#gameplay", label: "Creative flow", detail: "How ideas move" },
 ];
 
-/** Footer Games hover art — swaps pair every 2 hovers */
+/** Footer Games hover art — swaps pair every 2 hovers; crops scale per breakpoint */
 const footerGameArtPairs = [
   {
     left: {
       src: "/footer-anime/anime-4.png",
-      className: "object-cover object-[180%_6%] scale-[1.35]",
+      className:
+        "object-cover object-[68%_6%] scale-[1.15] sm:object-[72%_8%] sm:scale-[1.25] md:object-[74%_10%] md:scale-[1.35]",
     },
     right: {
       src: "/footer-anime/anime-3.png",
-      className: "object-cover object-[68%_8%] scale-[1.35]",
+      className:
+        "object-cover object-[64%_6%] scale-[1.15] sm:object-[68%_8%] sm:scale-[1.25] md:object-[70%_10%] md:scale-[1.35]",
     },
   },
   {
     left: {
       src: "/footer-anime/endmin-nw.png",
-      className: "object-cover object-[50%_2%] scale-[1.2]",
+      className:
+        "object-cover object-[50%_6%] scale-[1.12] sm:object-[50%_8%] sm:scale-[1.2] md:object-[50%_10%] md:scale-[1.28]",
     },
     right: {
       src: "/footer-anime/anime-6.png",
-      className: "object-cover object-[70%_28%] scale-[1.3]",
+      className:
+        "object-cover object-[68%_8%] scale-[1.15] sm:object-[70%_10%] sm:scale-[1.25] md:object-[72%_12%] md:scale-[1.32]",
     },
   },
 ] as const;
@@ -188,17 +196,26 @@ export default function Home() {
   const [isGlitching, setIsGlitching] = useState(false);
   const [glitchKey, setGlitchKey] = useState(0);
   const [hasMounted, setHasMounted] = useState(false);
-  const [bootState, setBootState] = useState<"pending" | "show" | "done">(
-    "pending"
+  const [bootState, setBootState] = useState<"show" | "done">(() =>
+    isStudioBootCompleted() ? "done" : "show"
   );
-  const [showAbout, setShowAbout] = useState(false);
   const [showFooterGamesArt, setShowFooterGamesArt] = useState(false);
   const [footerGamesHoverCount, setFooterGamesHoverCount] = useState(0);
   const [clearanceOpen, setClearanceOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [canHover, setCanHover] = useState(true);
   const [activeChannel, setActiveChannel] = useState<ChannelHoverMode | null>(
     null
   );
   const skipNextGlitch = useRef(true);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const sync = () => setCanHover(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   // Hover 1–2 → pair 0, hover 3–4 → pair 1, then loops
   const footerArtPairIndex =
@@ -252,18 +269,12 @@ export default function Home() {
     } catch {
       /* ignore */
     }
-    // Soft return home (About / Games → /) skips boot.
-    // Hard refresh resets the in-memory flag and always plays boot.
-    if (consumeSkipStudioBoot()) {
-      setBootState("done");
-      return;
-    }
-    setBootState("show");
   }, []);
 
   useEffect(() => {
     if (!bootDone) return;
-    setHasMounted(true);
+    const frame = window.requestAnimationFrame(() => setHasMounted(true));
+    return () => window.cancelAnimationFrame(frame);
   }, [bootDone]);
 
   useEffect(() => {
@@ -297,10 +308,12 @@ export default function Home() {
   return (
     <div className="bg-tactical relative min-h-full flex flex-col">
       {bootState === "show" ? (
-        <LoadingScreen onComplete={() => setBootState("done")} />
-      ) : null}
-      {showAbout ? (
-        <AboutExperience onClose={() => setShowAbout(false)} />
+        <LoadingScreen
+          onComplete={() => {
+            completeStudioBoot();
+            setBootState("done");
+          }}
+        />
       ) : null}
       <ScrollProgress />
 
@@ -319,45 +332,83 @@ export default function Home() {
       />
 
       <header className="sticky top-0 z-40 border-b border-primary/15 glass-panel">
-        <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
+        <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <BrandMark href="#hero" priority />
           <div className="hidden items-center gap-8 md:flex">
-            {navLinks.map((link) =>
-              "openAbout" in link && link.openAbout ? (
-                <button
-                  key={link.label}
-                  type="button"
-                  onClick={() => setShowAbout(true)}
-                  className="hud-label transition-colors hover:text-primary"
-                >
-                  {link.label}
-                </button>
-              ) : (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  className="hud-label transition-colors hover:text-primary"
-                >
-                  {link.label}
-                </a>
-              )
-            )}
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="hud-label transition-colors hover:text-primary"
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
-          <Button
-            size="sm"
-            className="rounded-sm bg-primary font-medium text-primary-foreground hover:bg-primary/90"
-            nativeButton={false}
-            render={<a href="#newsletter" />}
-          >
-            Connect
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              className="hidden rounded-sm bg-primary font-medium text-primary-foreground hover:bg-primary/90 sm:inline-flex"
+              nativeButton={false}
+              render={<a href="#newsletter" />}
+            >
+              Connect
+            </Button>
+            <Button
+              type="button"
+              size="icon-sm"
+              variant="outline"
+              className="rounded-sm border-primary/25 md:hidden"
+              aria-expanded={mobileNavOpen}
+              aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
+              onClick={() => setMobileNavOpen((open) => !open)}
+            >
+              {mobileNavOpen ? (
+                <X className="size-4" />
+              ) : (
+                <Menu className="size-4" />
+              )}
+            </Button>
+          </div>
         </nav>
+
+        <AnimatePresence>
+          {mobileNavOpen ? (
+            <motion.div
+              className="border-t border-primary/10 bg-[oklch(0.18_0.04_350/0.96)] px-4 py-4 backdrop-blur-md md:hidden"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <div className="mx-auto flex max-w-6xl flex-col gap-1 overflow-hidden">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="rounded-sm px-3 py-3 font-display text-base text-foreground/90 transition-colors hover:bg-primary/10 hover:text-primary active:bg-primary/15"
+                    onClick={() => setMobileNavOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+                <a
+                  href="#newsletter"
+                  className="mt-2 inline-flex h-10 items-center justify-center rounded-sm bg-primary px-3 text-sm font-medium text-primary-foreground"
+                  onClick={() => setMobileNavOpen(false)}
+                >
+                  Connect
+                </a>
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
       </header>
 
       <main className="relative z-10 flex-1">
         <section
           id="hero"
-          className="relative scroll-mt-14 overflow-hidden px-6 pb-24 pt-20 md:pb-32 md:pt-28"
+          className="relative scroll-mt-14 overflow-hidden px-4 pb-16 pt-16 sm:px-6 sm:pb-24 md:pb-32 md:pt-28"
         >
           {activeBackground ? (
             <div
@@ -404,9 +455,9 @@ export default function Home() {
           <div className="relative mx-auto max-w-6xl">
             <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
               <motion.div
-                initial={{ opacity: 0, x: -24 }}
+                initial={{ opacity: 0, x: -16 }}
                 animate={
-                  bootDone ? { opacity: 1, x: 0 } : { opacity: 0, x: -24 }
+                  bootDone ? { opacity: 1, x: 0 } : { opacity: 0, x: -16 }
                 }
                 transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                 className="relative z-10"
@@ -447,7 +498,8 @@ export default function Home() {
                   <Button
                     size="lg"
                     className="rounded-sm px-6"
-                    onClick={() => setShowAbout(true)}
+                    nativeButton={false}
+                    render={<a href="#features" />}
                   >
                     <Sparkles className="size-4" />
                     Explore Studio
@@ -486,7 +538,7 @@ export default function Home() {
                   delay: bootDone ? 0.15 : 0,
                   ease: [0.22, 1, 0.36, 1],
                 }}
-                className="relative mx-auto w-full max-w-md"
+                className="relative mx-auto w-full max-w-md lg:max-w-none"
               >
                 {/* Games / Anime switch */}
                 <div className="mb-4 flex items-center justify-center gap-1 rounded-sm border border-primary/20 bg-background/40 p-1 backdrop-blur-sm">
@@ -592,7 +644,8 @@ export default function Home() {
 
                 {currentSlide?.title ? (
                   <p className="mt-3 text-center font-mono-hud text-xs tracking-widest text-muted-foreground uppercase">
-                    {carouselMode === "games" ? "Played" : "Watched"} //{" "}
+                    {carouselMode === "games" ? "Played" : "Watched"}
+                    {" // "}
                     {currentSlide.title}
                   </p>
                 ) : null}
@@ -603,7 +656,7 @@ export default function Home() {
 
         <section
           id="features"
-          className="relative scroll-mt-14 overflow-x-hidden px-6 py-20 md:py-28"
+          className="relative scroll-mt-14 overflow-x-hidden px-4 py-16 sm:px-6 md:py-28"
         >
           <ChannelHoverArt mode={activeChannel} />
 
@@ -617,14 +670,6 @@ export default function Home() {
                 Not a company profile a clearance file for the person behind
                 the archive.
               </p>
-              <Button
-                size="sm"
-                variant="outline"
-                className="mt-5 rounded-sm border-primary/25 bg-background/30"
-                onClick={() => setShowAbout(true)}
-              >
-                Enter full dossier
-              </Button>
             </FadeIn>
 
             <FadeIn delay={0.08} className="mt-12">
@@ -638,7 +683,7 @@ export default function Home() {
 
         <Separator className="mx-auto max-w-6xl bg-primary/15" />
 
-        <section id="gameplay" className="scroll-mt-14 px-6 py-20 md:py-28">
+        <section id="gameplay" className="scroll-mt-14 px-4 py-16 sm:px-6 md:py-28">
           <div className="mx-auto max-w-6xl">
             <FadeIn className="text-center">
               <p className="hud-label text-accent">Creative Flow</p>
@@ -651,10 +696,10 @@ export default function Home() {
               </p>
             </FadeIn>
 
-            <div className="mt-14 grid gap-px overflow-hidden rounded-sm border border-primary/15 bg-primary/10 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-10 grid gap-px overflow-hidden rounded-sm border border-primary/15 bg-primary/10 sm:mt-14 sm:grid-cols-2 lg:grid-cols-4">
               {loopSteps.map((item, i) => (
                 <FadeIn key={item.phase} delay={i * 0.08}>
-                  <div className="h-full bg-card/70 p-6 backdrop-blur-sm transition-colors hover:bg-card/85">
+                  <div className="h-full bg-card/70 p-5 backdrop-blur-sm transition-colors hover:bg-card/85 active:bg-card/90 sm:p-6">
                     <p className="hud-label text-primary">{item.phase}</p>
                     <h3 className="mt-3 font-display text-lg font-medium">
                       {item.label}
@@ -669,7 +714,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="media" className="scroll-mt-14 px-6 py-20 md:py-28">
+        <section id="media" className="scroll-mt-14 px-4 py-16 sm:px-6 md:py-28">
           <div className="mx-auto max-w-6xl">
             <FadeIn>
               <p className="hud-label text-primary">Archive</p>
@@ -710,9 +755,9 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="newsletter" className="scroll-mt-14 px-6 py-20 md:py-28">
+        <section id="newsletter" className="scroll-mt-14 px-4 py-16 sm:px-6 md:py-28">
           <FadeIn>
-            <HudFrame className="mx-auto max-w-3xl glass-panel p-8 md:p-12">
+            <HudFrame className="mx-auto max-w-3xl glass-panel p-6 sm:p-8 md:p-12">
               <div className="text-center">
                 <p className="hud-label text-accent">Stay Connected</p>
                 <h2 className="font-display mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
@@ -749,54 +794,53 @@ export default function Home() {
         <div
           aria-hidden
           className={cn(
-            "pointer-events-none absolute inset-y-0 left-0 z-0 w-[min(48%,360px)] overflow-hidden transition-all duration-500 ease-out md:w-[min(42%,420px)]",
+            "hover-art-frame pointer-events-none absolute inset-y-0 left-0 z-0 overflow-hidden transition-all duration-500 ease-out",
             showFooterGamesArt
               ? "translate-x-0 opacity-100"
-              : "-translate-x-8 opacity-0"
+              : "-translate-x-6 opacity-0 sm:-translate-x-8"
           )}
         >
-          {/* Image sits slightly shorter inside the same frame */}
-          <div className="hover-art-fade-left absolute inset-x-0 bottom-0 top-[12%]">
+          <div className="hover-art-fade-left absolute inset-0">
             <ProtectedImage
               key={footerArtPair.left.src}
               src={footerArtPair.left.src}
               alt=""
               fill
-              sizes="420px"
+              sizes="(max-width: 640px) 42vw, (max-width: 1024px) 36vw, 420px"
               className={cn(
                 footerArtPair.left.className,
-                "mix-blend-lighten opacity-70"
+                "mix-blend-lighten opacity-65 sm:opacity-70"
               )}
             />
           </div>
           <div className="absolute inset-0 bg-gradient-to-r from-[oklch(0.19_0.042_350/0.35)] from-0% via-[oklch(0.19_0.042_350/0.2)] via-40% to-[oklch(0.19_0.042_350/0.95)]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.19_0.042_350/0.55)] via-transparent to-[oklch(0.19_0.042_350/0.35)]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.19_0.042_350/0.55)] via-transparent to-transparent" />
         </div>
         {/* Games hover art — right character */}
         <div
           aria-hidden
           className={cn(
-            "pointer-events-none absolute inset-y-0 right-0 z-0 w-[min(48%,360px)] overflow-hidden transition-all duration-500 ease-out md:w-[min(42%,420px)]",
+            "hover-art-frame pointer-events-none absolute inset-y-0 right-0 z-0 overflow-hidden transition-all duration-500 ease-out",
             showFooterGamesArt
               ? "translate-x-0 opacity-100"
-              : "translate-x-8 opacity-0"
+              : "translate-x-6 opacity-0 sm:translate-x-8"
           )}
         >
-          <div className="hover-art-fade-right absolute inset-x-0 bottom-0 top-[12%]">
+          <div className="hover-art-fade-right absolute inset-0">
             <ProtectedImage
               key={footerArtPair.right.src}
               src={footerArtPair.right.src}
               alt=""
               fill
-              sizes="420px"
+              sizes="(max-width: 640px) 42vw, (max-width: 1024px) 36vw, 420px"
               className={cn(
                 footerArtPair.right.className,
-                "mix-blend-lighten opacity-70"
+                "mix-blend-lighten opacity-65 sm:opacity-70"
               )}
             />
           </div>
           <div className="absolute inset-0 bg-gradient-to-l from-[oklch(0.19_0.042_350/0.35)] from-0% via-[oklch(0.19_0.042_350/0.2)] via-40% to-[oklch(0.19_0.042_350/0.95)]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.19_0.042_350/0.55)] via-transparent to-[oklch(0.19_0.042_350/0.35)]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.19_0.042_350/0.55)] via-transparent to-transparent" />
         </div>
 
         {/* Soft center veil — keeps copy readable without flattening the art */}
@@ -808,8 +852,8 @@ export default function Home() {
           )}
         />
 
-        <div className="relative z-10 mx-auto max-w-6xl px-6 pt-14 pb-8">
-          <div className="grid gap-12 md:grid-cols-[1.35fr_repeat(3,minmax(0,1fr))] md:gap-10">
+        <div className="relative z-10 mx-auto max-w-6xl px-4 pt-12 pb-8 sm:px-6 sm:pt-14">
+          <div className="grid gap-10 md:grid-cols-[1.35fr_repeat(3,minmax(0,1fr))] md:gap-10">
             {/* Brand */}
             <div className="max-w-sm">
               <BrandMark href="#hero" />
@@ -837,22 +881,12 @@ export default function Home() {
               <ul className="mt-4 space-y-2.5">
                 {navLinks.map((link) => (
                   <li key={link.label}>
-                    {"openAbout" in link && link.openAbout ? (
-                      <button
-                        type="button"
-                        onClick={() => setShowAbout(true)}
-                        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                      >
-                        {link.label}
-                      </button>
-                    ) : (
-                      <a
-                        href={link.href}
-                        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                      >
-                        {link.label}
-                      </a>
-                    )}
+                    <Link
+                      href={link.href}
+                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
                 <li>
@@ -876,25 +910,36 @@ export default function Home() {
                       href={item.href}
                       className="group block"
                       onMouseEnter={
-                        "revealArt" in item && item.revealArt
+                        canHover && "revealArt" in item && item.revealArt
                           ? revealFooterGamesArt
                           : undefined
                       }
                       onMouseLeave={
-                        "revealArt" in item && item.revealArt
+                        canHover && "revealArt" in item && item.revealArt
                           ? hideFooterGamesArt
                           : undefined
                       }
                       onFocus={
-                        "revealArt" in item && item.revealArt
+                        canHover && "revealArt" in item && item.revealArt
                           ? showFooterGamesArtOnly
                           : undefined
                       }
                       onBlur={
-                        "revealArt" in item && item.revealArt
+                        canHover && "revealArt" in item && item.revealArt
                           ? hideFooterGamesArt
                           : undefined
                       }
+                      onClick={(event) => {
+                        if (
+                          !canHover &&
+                          "revealArt" in item &&
+                          item.revealArt &&
+                          !showFooterGamesArt
+                        ) {
+                          event.preventDefault();
+                          revealFooterGamesArt();
+                        }
+                      }}
                     >
                       <span className="text-sm text-foreground/90 transition-colors group-hover:text-primary">
                         {item.label}

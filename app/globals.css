@@ -305,6 +305,29 @@
     }
   }
 
+  /* Footer side art: tighter mobile columns so characters fit without zoom */
+  .footer-art-frame.hover-art-frame {
+    width: clamp(5.25rem, 30vw, 8.75rem);
+  }
+
+  @media (min-width: 640px) {
+    .footer-art-frame.hover-art-frame {
+      width: clamp(11rem, 34vw, 20rem);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .footer-art-frame.hover-art-frame {
+      width: clamp(16rem, 28vw, 27.5rem);
+    }
+  }
+
+  @media (min-width: 1400px) {
+    .footer-art-frame.hover-art-frame {
+      width: clamp(18rem, 24vw, 30rem);
+    }
+  }
+
   /* Soft cell dissolves for the right-side quad formation */
   .hover-quad-tl {
     -webkit-mask-image:
@@ -1234,6 +1257,15 @@
     background: oklch(0.78 0.07 85 / 0.2);
     box-shadow: 0 0 14px oklch(0.8 0.08 85 / 0.35);
     color: oklch(0.9 0.07 85);
+  }
+
+  /* Mobile: chip collage is the fill — keep glow as border/shadow only */
+  @media (max-width: 767px) {
+    .channel-glitch-chip.is-glowing,
+    .channel-glitch-chip[data-channel="anime"].is-glowing,
+    .channel-glitch-chip[data-channel="solo"].is-glowing {
+      background: transparent;
+    }
   }
 
   /* About section atmospheric washes per channel */

@@ -148,30 +148,30 @@ const footerArchive = [
   { href: "#gameplay", label: "Creative flow", detail: "How ideas move" },
 ];
 
-/** Footer Games hover art — swaps pair every 2 hovers; crops scale per breakpoint */
+/** Footer Games hover art — swaps pair every 2 hovers; mobile stays fit-to-frame (no zoom) */
 const footerGameArtPairs = [
   {
     left: {
       src: "/footer-anime/anime-4.png",
       className:
-        "object-cover object-[68%_6%] scale-[1.15] sm:object-[72%_8%] sm:scale-[1.25] md:object-[74%_10%] md:scale-[1.35]",
+        "object-contain object-[center_12%] scale-100 sm:object-cover sm:object-[72%_8%] sm:scale-[1.15] md:object-[74%_10%] md:scale-[1.35]",
     },
     right: {
       src: "/footer-anime/anime-3.png",
       className:
-        "object-cover object-[64%_6%] scale-[1.15] sm:object-[68%_8%] sm:scale-[1.25] md:object-[70%_10%] md:scale-[1.35]",
+        "object-contain object-[center_10%] scale-100 sm:object-cover sm:object-[68%_8%] sm:scale-[1.15] md:object-[70%_10%] md:scale-[1.35]",
     },
   },
   {
     left: {
       src: "/footer-anime/endmin-nw.png",
       className:
-        "object-cover object-[50%_6%] scale-[1.12] sm:object-[50%_8%] sm:scale-[1.2] md:object-[50%_10%] md:scale-[1.28]",
+        "object-contain object-[center_8%] scale-100 sm:object-cover sm:object-[50%_8%] sm:scale-[1.12] md:object-[50%_10%] md:scale-[1.28]",
     },
     right: {
       src: "/footer-anime/anime-6.png",
       className:
-        "object-cover object-[68%_8%] scale-[1.15] sm:object-[70%_10%] sm:scale-[1.25] md:object-[72%_12%] md:scale-[1.32]",
+        "object-contain object-[center_12%] scale-100 sm:object-cover sm:object-[70%_10%] sm:scale-[1.15] md:object-[72%_12%] md:scale-[1.32]",
     },
   },
 ] as const;
@@ -794,7 +794,7 @@ export default function Home() {
         <div
           aria-hidden
           className={cn(
-            "hover-art-frame pointer-events-none absolute inset-y-0 left-0 z-0 overflow-hidden transition-all duration-500 ease-out",
+            "footer-art-frame hover-art-frame pointer-events-none absolute inset-y-0 left-0 z-0 overflow-hidden transition-all duration-500 ease-out",
             showFooterGamesArt
               ? "translate-x-0 opacity-100"
               : "-translate-x-6 opacity-0 sm:-translate-x-8"
@@ -806,10 +806,10 @@ export default function Home() {
               src={footerArtPair.left.src}
               alt=""
               fill
-              sizes="(max-width: 640px) 42vw, (max-width: 1024px) 36vw, 420px"
+              sizes="(max-width: 640px) 36vw, (max-width: 1024px) 36vw, 420px"
               className={cn(
                 footerArtPair.left.className,
-                "mix-blend-lighten opacity-65 sm:opacity-70"
+                "mix-blend-lighten opacity-60 sm:opacity-70"
               )}
             />
           </div>
@@ -820,7 +820,7 @@ export default function Home() {
         <div
           aria-hidden
           className={cn(
-            "hover-art-frame pointer-events-none absolute inset-y-0 right-0 z-0 overflow-hidden transition-all duration-500 ease-out",
+            "footer-art-frame hover-art-frame pointer-events-none absolute inset-y-0 right-0 z-0 overflow-hidden transition-all duration-500 ease-out",
             showFooterGamesArt
               ? "translate-x-0 opacity-100"
               : "translate-x-6 opacity-0 sm:translate-x-8"
@@ -832,10 +832,10 @@ export default function Home() {
               src={footerArtPair.right.src}
               alt=""
               fill
-              sizes="(max-width: 640px) 42vw, (max-width: 1024px) 36vw, 420px"
+              sizes="(max-width: 640px) 36vw, (max-width: 1024px) 36vw, 420px"
               className={cn(
                 footerArtPair.right.className,
-                "mix-blend-lighten opacity-65 sm:opacity-70"
+                "mix-blend-lighten opacity-60 sm:opacity-70"
               )}
             />
           </div>

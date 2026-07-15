@@ -134,6 +134,49 @@ const CHANNEL_ART: Record<ChannelHoverMode, ChannelArt> = {
   },
 };
 
+/** Compact collage sources for mobile channel-chip backgrounds. */
+export const CHANNEL_CARD_BG: Record<
+  ChannelHoverMode,
+  { src: string; className: string; objectClassName: string }[]
+> = {
+  games: [
+    {
+      src: "/games-img/genshin1.png",
+      className: "left-[-6%] top-[-18%] h-[110%] w-[58%] -rotate-[3deg]",
+      objectClassName: "object-contain opacity-90",
+    },
+    {
+      src: "/games-img/endfild1.png",
+      className: "right-[-8%] bottom-[-22%] h-[105%] w-[55%] rotate-[4deg]",
+      objectClassName: "object-contain opacity-85",
+    },
+  ],
+  anime: [
+    {
+      src: "/footer-anime/anime-3.png",
+      className: "left-[-10%] top-[-28%] h-[130%] w-[62%]",
+      objectClassName: "object-cover object-[62%_10%] opacity-90",
+    },
+    {
+      src: "/footer-anime/anime-4.png",
+      className: "right-[-12%] bottom-[-30%] h-[125%] w-[58%]",
+      objectClassName: "object-cover object-[42%_12%] opacity-85",
+    },
+  ],
+  solo: [
+    {
+      src: "/games-img/studio-full.png",
+      className: "left-[0%] top-[-12%] h-[90%] w-[68%] -rotate-[2deg]",
+      objectClassName: "object-contain opacity-85",
+    },
+    {
+      src: "/games-img/studio-logo.png",
+      className: "right-[2%] bottom-[-8%] h-[62%] w-[46%] rotate-[6deg]",
+      objectClassName: "object-contain opacity-70",
+    },
+  ],
+};
+
 type ChannelHoverArtProps = {
   mode?: ChannelHoverMode | null;
   className?: string;
@@ -218,7 +261,7 @@ export function ChannelHoverArt({
     >
       <div
         className={cn(
-          "absolute inset-0 transition-opacity duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+          "absolute inset-0 transition-opacity duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] max-md:hidden",
           art.wash,
           active ? "opacity-100" : "opacity-0"
         )}
@@ -230,8 +273,11 @@ export function ChannelHoverArt({
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_28%,oklch(0.18_0.04_350/0.35)_100%)]" />
       </div>
 
-      <SideCollage tiles={art.left} side="left" active={active} />
-      <SideCollage tiles={art.right} side="right" active={active} />
+      {/* Side collage is desktop+; mobile uses chip card backgrounds instead */}
+      <div className="hidden md:contents">
+        <SideCollage tiles={art.left} side="left" active={active} />
+        <SideCollage tiles={art.right} side="right" active={active} />
+      </div>
     </div>
   );
 }

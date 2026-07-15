@@ -1,13 +1,61 @@
 "use client";
 
 import { GamesLoadingScreen } from "@/components/games/games-loading-screen";
-import type { ChannelHoverMode } from "@/components/landing/channel-hover-games";
+import {
+  CHANNEL_CARD_BG,
+  type ChannelHoverMode,
+} from "@/components/landing/channel-hover-games";
 import { HudFrame } from "@/components/landing/hud-frame";
+import { ProtectedImage } from "@/components/landing/protected-image";
 import { dossierChannels, dossierFields } from "@/lib/dossier";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type AnimationEvent } from "react";
+
+function ChannelChipArtBg({
+  mode,
+  active,
+}: {
+  mode: ChannelHoverMode;
+  active: boolean;
+}) {
+  const tiles = CHANNEL_CARD_BG[mode];
+
+  return (
+    <div
+      aria-hidden
+      className={cn(
+        "pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-sm md:hidden",
+        "transition-opacity duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        active ? "opacity-100" : "opacity-0"
+      )}
+    >
+      {tiles.map((tile) => (
+        <div
+          key={tile.src + tile.className}
+          className={cn(
+            "absolute transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            tile.className,
+            active ? "scale-100" : "scale-95"
+          )}
+        >
+          <div className="relative size-full">
+            <ProtectedImage
+              src={tile.src}
+              alt=""
+              fill
+              sizes="(max-width: 768px) 80vw, 1px"
+              className={tile.objectClassName}
+            />
+          </div>
+        </div>
+      ))}
+      <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/75 to-background/50" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background/85 via-transparent to-background/40" />
+    </div>
+  );
+}
 
 type OperatorDossierProps = {
   className?: string;
@@ -16,9 +64,9 @@ type OperatorDossierProps = {
 };
 
 /**
- * Desktop: hover previews channel art.
- * Touch: first tap pins the art; second tap on the same chip follows the link
- * (Games still opens clearance on any tap after pinning/previewing).
+ * Desktop: hover previews channel art on the sides.
+ * Mobile: first tap pins art inside the chip background; second tap enters.
+ * (Games opens clearance after preview is pinned.)
  */
 export function OperatorDossier({
   className,
@@ -136,18 +184,19 @@ export function OperatorDossier({
               const isGames = channel.id === "games";
 
               const className = cn(
-                "channel-glitch-chip group flex min-h-14 items-start gap-3 rounded-sm border border-primary/15 bg-background/25 px-3.5 py-3.5 transition-colors hover:border-primary/35 hover:bg-primary/5 active:scale-[0.99] sm:min-h-0 sm:py-3",
+                "channel-glitch-chip group flex min-h-[4.5rem] items-start gap-3 rounded-sm border border-primary/15 bg-background/25 px-3.5 py-3.5 transition-colors hover:border-primary/35 hover:bg-primary/5 active:scale-[0.99] sm:min-h-0 sm:py-3 md:min-h-0",
                 isActive && "is-glowing",
                 isGlitching && "is-glitching"
               );
 
               const content = (
                 <>
+                  <ChannelChipArtBg mode={channel.id} active={isActive} />
                   <div className="channel-glitch-icon relative z-[1] mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-sm border border-primary/25 bg-primary/10 text-primary transition-all sm:size-8">
                     <channel.icon className="size-3.5" />
                   </div>
                   <div className="relative z-[1] min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <p className="font-display text-sm font-medium text-foreground">
                         {channel.label}
                       </p>
